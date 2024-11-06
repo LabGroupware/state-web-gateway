@@ -1,0 +1,13 @@
+app:
+  name: @applicationName@
+  version: @version@
+spring:
+  application:
+    name: lg-state-webgateway
+  main:
+    banner-mode: OFF
+server:
+  port: 8080
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
