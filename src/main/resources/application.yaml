@@ -1,0 +1,29 @@
+app:
+  name: @applicationName@
+  version: @version@
+  requireHttps: ${REQUIRE_HTTPS:false}
+  front:
+    origins: ${FRONT_ORIGINS:"http://localhost:3000"}
+spring:
+  application:
+    name: lg-state-webgateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwkSetUri: ${JWK_SET_URI:http://localhost:8090/oauth2/jwks}
+server:
+  port: ${WEB_GATEWAY_PORT:8100}
+springdoc:
+  swaggerUi:
+    path: /swagger-ui.html
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+grpc:
+  client:
+    userProfileService:
+      address: dns:///${USER_PROFILE_SERVICE_HOST:localhost}:${USER_PROFILE_SERVICE_GRPC_PORT:9080}
+

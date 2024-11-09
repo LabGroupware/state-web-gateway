@@ -20,22 +20,32 @@ configurations {
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
+	maven {
+		url "https://buf.build/gen/maven"
+	}
 }
 
 ext {
 	set('logstashEncoder', "8.0")
 	set('springdocVersion', "2.6.0")
+	set('grpcStarterVersion', "3.1.0.RELEASE")
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation "net.logstash.logback:logstash-logback-encoder:${logstashEncoder}"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+	implementation "net.devh:grpc-client-spring-boot-starter:${grpcStarterVersion}"
+	implementation 'build.buf.gen:labgroupware_state_grpc_java:1.68.1.1.20241104185156.0a4e7766c4db'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
@@ -48,7 +58,7 @@ tasks.named('test') {
 
 import org.apache.tools.ant.filters.ReplaceTokens
 processResources {
-	filesMatching('**/application.yml') {
+	filesMatching('**/application.yaml') {
 		filter(
 				ReplaceTokens,
 				tokens: [
