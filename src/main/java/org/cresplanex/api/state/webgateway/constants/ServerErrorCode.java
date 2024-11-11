@@ -18,4 +18,9 @@ public class ServerErrorCode {
     public static final String EXCEED_MAX_UPLOAD_SIZE = "0000.1009";
     public static final String NOT_FOUND_HANDLER = "0000.1010";
     public static final String NOT_READABLE_REQUEST = "0000.1011";
+
+    public static final String JOB_COMPLETED = "0001.0000";
+    public static final String JOB_FAILED = "0001.0001";
+    public static final String JOB_PROCESSING = "0001.0002";
+    public static final String JOB_NOT_FOUND = "0001.0003";
 }
