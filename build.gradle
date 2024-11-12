@@ -41,7 +41,7 @@ dependencies {
 	implementation "net.logstash.logback:logstash-logback-encoder:${logstashEncoder}"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 	implementation "net.devh:grpc-client-spring-boot-starter:${grpcStarterVersion}"
-	implementation 'build.buf.gen:labgroupware_state_grpc_java:1.68.1.1.20241104185156.0a4e7766c4db'
+	implementation 'build.buf.gen:labgroupware_state_grpc_java:1.68.1.1.20241111140714.e6fb94050c08'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
