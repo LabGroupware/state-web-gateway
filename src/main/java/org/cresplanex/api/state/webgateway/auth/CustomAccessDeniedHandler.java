@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.cresplanex.api.state.webgateway.constants.ServerErrorCode;
+import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
 import org.cresplanex.api.state.webgateway.dto.ErrorAttributeDto;
 import org.cresplanex.api.state.webgateway.dto.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
@@ -35,7 +35,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.ACCESS_DENIED,
+                WebGatewayApplicationCode.ACCESS_DENIED,
                 "Access denied",
                 errorAttributeDTO
         );

@@ -3,7 +3,7 @@ package org.cresplanex.api.state.webgateway.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.cresplanex.api.state.webgateway.constants.ServerErrorCode;
+import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
 import org.cresplanex.api.state.webgateway.dto.ErrorAttributeDto;
 import org.cresplanex.api.state.webgateway.dto.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
         ErrorAttributeDto errorAttributeDTO = getErrorAttributeDto(ex, request);
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.VALIDATION_ERROR,
+                WebGatewayApplicationCode.VALIDATION_ERROR,
                 "Validation Error",
                 errorAttributeDTO
         );
@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.METHOD_NOT_ALLOWED,
+                WebGatewayApplicationCode.METHOD_NOT_ALLOWED,
                 "Method Not Supported",
                 errorAttributeDTO
         );
@@ -109,7 +109,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.NOT_SUPPORT_CONTENT_TYPE,
+                WebGatewayApplicationCode.NOT_SUPPORT_CONTENT_TYPE,
                 "Media Type Not Supported",
                 errorAttributeDTO
         );
@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.MISSING_PATH_VARIABLE,
+                WebGatewayApplicationCode.MISSING_PATH_VARIABLE,
                 "Validation Error",
                 errorAttributeDTO
         );
@@ -154,7 +154,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.EXCEED_MAX_UPLOAD_SIZE,
+                WebGatewayApplicationCode.EXCEED_MAX_UPLOAD_SIZE,
                 "Validation Error",
                 errorAttributeDTO
         );
@@ -176,7 +176,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.NOT_FOUND_HANDLER,
+                WebGatewayApplicationCode.NOT_FOUND_HANDLER,
                 "Not Found",
                 errorAttributeDTO
         );
@@ -199,7 +199,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.NOT_FOUND_HANDLER,
+                WebGatewayApplicationCode.NOT_FOUND_HANDLER,
                 "Internal Server Error",
                 errorAttributeDTO
         );
@@ -220,7 +220,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.NOT_READABLE_REQUEST,
+                WebGatewayApplicationCode.NOT_READABLE_REQUEST,
                 "Not Readable Request",
                 errorAttributeDTO
         );
@@ -240,7 +240,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.AUTHENTICATION_FAILED,
+                WebGatewayApplicationCode.AUTHENTICATION_FAILED,
                 "Authentication Error",
                 errorAttributeDTO
         );
@@ -262,7 +262,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.ACCESS_DENIED,
+                WebGatewayApplicationCode.ACCESS_DENIED,
                 "Access Denied",
                 errorAttributeDTO
         );
@@ -286,7 +286,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.METHOD_ARGUMENT_TYPE_MISMATCH,
+                WebGatewayApplicationCode.METHOD_ARGUMENT_TYPE_MISMATCH,
                 "Validation Error",
                 errorAttributeDTO
         );
@@ -307,7 +307,7 @@ public class GlobalExceptionHandler {
         );
 
         ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
-                ServerErrorCode.INTERNAL_SERVER_ERROR,
+                WebGatewayApplicationCode.INTERNAL_SERVER_ERROR,
                 "Internal Server Error",
                 errorAttributeDTO
         );

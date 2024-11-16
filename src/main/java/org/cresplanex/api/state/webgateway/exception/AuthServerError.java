@@ -1,7 +1,7 @@
 package org.cresplanex.api.state.webgateway.exception;
 
 import lombok.Getter;
-import org.cresplanex.api.state.webgateway.constants.ServerErrorCode;
+import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
 
 @Getter
 public class AuthServerError {
@@ -10,7 +10,7 @@ public class AuthServerError {
     private final String message;
 
     public AuthServerError() {
-        this(ServerErrorCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+        this(WebGatewayApplicationCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
     }
 
     public AuthServerError(String code, String message) {
