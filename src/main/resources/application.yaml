@@ -12,6 +12,9 @@ spring:
       resourceserver:
         jwt:
           jwkSetUri: ${JWK_SET_URI:http://localhost:8090/oauth2/jwks}
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
 server:
   port: ${WEB_GATEWAY_PORT:8100}
 springdoc:
@@ -22,8 +25,42 @@ management:
     web:
       exposure:
         include: "*"
+
 grpc:
   client:
+    jobService:
+      address: dns:///${JOB_SERVICE_HOST:localhost}:${JOB_SERVICE_GRPC_PORT:9100}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
     userProfileService:
       address: dns:///${USER_PROFILE_SERVICE_HOST:localhost}:${USER_PROFILE_SERVICE_GRPC_PORT:9080}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
+    userPreferenceService:
+      address: dns:///${USER_PREFERENCE_SERVICE_HOST:localhost}:${USER_PREFERENCE_SERVICE_GRPC_PORT:9070}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
+    organizationService:
+      address: dns:///${ORGANIZATION_SERVICE_HOST:localhost}:${ORGANIZATION_SERVICE_GRPC_PORT:9060}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
+    teamService:
+      address: dns:///${TEAM_SERVICE_HOST:localhost}:${TEAM_SERVICE_GRPC_PORT:9050}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
+    storageService:
+        address: dns:///${STORAGE_SERVICE_HOST:localhost}:${STORAGE_SERVICE_GRPC_PORT:9040}
+        enableKeepAlive: true
+        keepAliveWithoutCalls: true
+        negotiationType: PLAINTEXT
+    planService:
+      address: dns:///${PLAN_SERVICE_HOST:localhost}:${PLAN_SERVICE_GRPC_PORT:9030}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
 
