@@ -1,4 +1,4 @@
-package org.cresplanex.api.state.webgateway.proxy;
+package org.cresplanex.api.state.webgateway.proxy.query;
 
 import build.buf.gen.job.v1.FindJobRequest;
 import build.buf.gen.job.v1.FindJobResponse;
@@ -8,7 +8,7 @@ import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 
 @Service
-public class JobServiceProxy {
+public class JobQueryServiceProxy {
 
     @GrpcClient("jobService")
     private JobServiceGrpc.JobServiceBlockingStub jobServiceBlockingStub;
