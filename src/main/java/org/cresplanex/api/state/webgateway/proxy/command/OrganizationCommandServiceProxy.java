@@ -14,17 +14,14 @@ public class OrganizationCommandServiceProxy {
 
     public String createOrganization(
             String operatorId,
-            OrganizationWithUsers organizationWithUsers
+            Organization organization,
+            List<OrganizationUserRequestType> users
     ) {
         CreateOrganizationRequest request = CreateOrganizationRequest.newBuilder()
                 .setOperatorId(operatorId)
-                .setName(organizationWithUsers.getOrganization().getName())
-                .setPlan(organizationWithUsers.getOrganization().getPlan())
-                .addAllUsers(organizationWithUsers.getUsersList()
-                        .stream().map(attachment -> UserOnOrganization.newBuilder()
-                                .setUserId(attachment.getUserId())
-                                .build())
-                        .toList())
+                .setName(organization.getName())
+                .setPlan(organization.getPlan())
+                .addAllUsers(users)
                 .build();
 
         CreateOrganizationResponse response = organizationServiceBlockingStub.createOrganization(request);
@@ -34,7 +31,7 @@ public class OrganizationCommandServiceProxy {
     public String addUsersToOrganization(
             String operatorId,
             String organizationId,
-            List<UserOnOrganization> users
+            List<OrganizationUserRequestType> users
     ) {
         AddOrganizationUserResponse response = organizationServiceBlockingStub.addOrganizationUser(AddOrganizationUserRequest.newBuilder()
                 .setOperatorId(operatorId)

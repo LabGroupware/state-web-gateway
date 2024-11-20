@@ -1,8 +1,7 @@
 package org.cresplanex.api.state.webgateway.controller;
 
 import build.buf.gen.organization.v1.Organization;
-import build.buf.gen.organization.v1.OrganizationWithUsers;
-import build.buf.gen.organization.v1.UserOnOrganization;
+import build.buf.gen.organization.v1.OrganizationUserRequestType;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,22 +32,16 @@ public class OrganizationController {
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        OrganizationWithUsers organization = OrganizationWithUsers.newBuilder()
-                .setOrganization(Organization.newBuilder()
-                        .setName(requestDTO.getName())
-                        .setPlan(requestDTO.getPlan())
-                        .build()
-                )
-                .addAllUsers(
-                        requestDTO.getUserIds().stream()
-                                .map(user -> UserOnOrganization
-                                        .newBuilder()
-                                        .setUserId(user)
-                                        .build())
-                                .toList()
-                )
+        Organization organization = Organization.newBuilder()
+                .setName(requestDTO.getName())
+                .setPlan(requestDTO.getPlan())
                 .build();
-        String jobId = organizationCommandServiceProxy.createOrganization(jwt.getSubject(), organization);
+        List<OrganizationUserRequestType> users = requestDTO.getUserIds().stream()
+                .map(user -> OrganizationUserRequestType.newBuilder()
+                        .setUserId(user)
+                        .build())
+                .toList();
+        String jobId = organizationCommandServiceProxy.createOrganization(jwt.getSubject(), organization, users);
 
         CommandResponseDto response = new CommandResponseDto();
 
@@ -67,8 +60,8 @@ public class OrganizationController {
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        List<UserOnOrganization> users = requestDTO.getUserIds().stream()
-                .map(user -> UserOnOrganization.newBuilder()
+        List<OrganizationUserRequestType> users = requestDTO.getUserIds().stream()
+                .map(user -> OrganizationUserRequestType.newBuilder()
                         .setUserId(user)
                         .build())
                 .toList();
