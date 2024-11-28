@@ -16,7 +16,6 @@ public class OrganizationRetrieveResolver {
         OrganizationRetriever organizationRetriever = new OrganizationRetriever();
         Result result = getResult(path);
 
-
         if (!result.usersRelationPath.isEmpty()) {
             organizationRetriever.setUsersRelationRetriever(
                     ListRelationRetrieverBuilder.<UserProfileOnOrganizationDto, OrganizationDto, UserProfileRetriever>builder()
@@ -33,7 +32,7 @@ public class OrganizationRetrieveResolver {
         if (!result.ownerRelationPath.isEmpty()) {
             organizationRetriever.setOwnerRelationRetriever(
                     RelationRetrieverBuilder.<UserProfileDto, OrganizationDto, UserProfileRetriever>builder()
-                            .idRetriever(dto -> dto.getOwner().isHasValue() ? dto.getOwner().getValue().getUserId() : null)
+                            .idRetriever(OrganizationDto::getOwnerId)
                             .relationRetriever(OrganizationDto::getOwner)
                             .chain(
                                     result.ownerRelationPath.stream()

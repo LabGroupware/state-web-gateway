@@ -31,7 +31,7 @@ public class TaskRetrieveResolver {
         if (!result.teamRelationPath.isEmpty()) {
             taskRetriever.setTeamRelationRetriever(
                     RelationRetrieverBuilder.<TeamDto, TaskDto, TeamRetriever>builder()
-                            .idRetriever(dto -> dto.getTeam().isHasValue() ? dto.getTeam().getValue().getTeamId() : null)
+                            .idRetriever(TaskDto::getTeamId)
                             .relationRetriever(TaskDto::getTeam)
                             .chain(
                                     result.teamRelationPath.stream()
@@ -42,7 +42,7 @@ public class TaskRetrieveResolver {
         if (!result.chargeUserRelationPath.isEmpty()) {
             taskRetriever.setChargeUserRelationRetriever(
                     RelationRetrieverBuilder.<UserProfileDto, TaskDto, UserProfileRetriever>builder()
-                            .idRetriever(dto -> dto.getChargeUser().isHasValue() ? dto.getChargeUser().getValue().getUserId() : null)
+                            .idRetriever(TaskDto::getChargeUserId)
                             .relationRetriever(TaskDto::getChargeUser)
                             .chain(
                                     result.chargeUserRelationPath.stream()

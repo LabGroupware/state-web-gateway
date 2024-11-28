@@ -5,14 +5,11 @@ import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskOnFileObjectDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectDto;
-import org.cresplanex.api.state.webgateway.hasher.TaskHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.TaskQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.FileObjectRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,260 +18,171 @@ public class AttachRelationFileObject {
 
     private final TaskQueryProxy taskQueryProxy;
 
-    public static final int NEED_TASK_ATTACHED_FILE_OBJECTS = 1 << 0;
-
-    public static final int GET_TASK_ATTACHED_FILE_OBJECTS = NEED_TASK_ATTACHED_FILE_OBJECTS;
-
     public void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, FileObjectDto fileObjectDto) {
 
         // attachedTasks
         if (retriever.getAttachedTasksRelationRetriever() != null) {
-            int need = 0;
-            for (TaskRetriever subRetriever : retriever.getAttachedTasksRelationRetriever().getChain()) {
-                if (subRetriever != null && subRetriever.getAttachmentsRelationRetriever() != null) {
-                    need |= NEED_TASK_ATTACHED_FILE_OBJECTS;
-                }
-            }
-
-            // 取得が必要なIDの取得
-            List<String> taskIds = retriever.getAttachedTasksRelationRetriever().getIdRetriever().apply(fileObjectDto);
-            List<String> needRetrieveAttachedTaskIds = new ArrayList<>();
-            Map<String, TaskDto> taskDtoMap = new HashMap<>();
-            List<TaskDto> task = new ArrayList<>();
-
-            switch (need) {
-                case GET_TASK_ATTACHED_FILE_OBJECTS:
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTaskWithAttachments(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTaskWithAttachments(taskId)));
-                            break;
-                        } else {
-                            needRetrieveAttachedTaskIds.add(taskId);
-                        }
-                    }
-                    if (!needRetrieveAttachedTaskIds.isEmpty()) {
-                        task = taskQueryProxy.getPluralTasksWithAttachments(
-                                operatorId,
-                                needRetrieveAttachedTaskIds,
-                                null,
-                                null
-                        ).getListData();
-
-                        for (TaskDto dto : task) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTaskWithAttachments(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-
-                    if(fileObjectDto.getAttachedTasks().isHasValue()) {
-                        List<TaskOnFileObjectDto> originAttachTasks = fileObjectDto.getAttachedTasks().getValue();
-                        List<String> attachAttachedTaskIds = originAttachTasks
-                                .stream()
-                                .map(TaskDto::getTaskId)
-                                .toList();
-                        List<TaskDto> attachAttachedTasks = attachAttachedTaskIds.stream()
-                                .map(taskDtoMap::get)
-                                .toList();
-                        fileObjectDto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
-                                .value(
-                                        attachAttachedTasks.stream()
-                                                .map(newTask -> new TaskOnFileObjectDto(newTask, originAttachTasks.stream()
-                                                        .filter(origin -> origin.getTaskId().equals(newTask.getTaskId()))
-                                                        .findFirst()
-                                                        .orElse(null)))
-                                                .toList()
-                                )
-                                .build()
-                        );
-                        ListRelation<TaskOnFileObjectDto> tasksRelation = retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(fileObjectDto);
-                        retriever.getAttachedTasksRelationRetriever().getChain().forEach(subRetriever -> {
-                            if (subRetriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                                // TODO: Implement this
-                            }
-                        });
-                    }
-                    break;
-                default:
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTask(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTask(taskId)));
-                            break;
-                        } else {
-                            needRetrieveAttachedTaskIds.add(taskId);
-                        }
-                    }
-
-                    if (!needRetrieveAttachedTaskIds.isEmpty()) {
-                        task = taskQueryProxy.getPluralTasks(
-                                operatorId,
-                                needRetrieveAttachedTaskIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (TaskDto dto : task) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTask(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-
-                    if(fileObjectDto.getAttachedTasks().isHasValue()) {
-                        List<TaskOnFileObjectDto> originAttachTasks = fileObjectDto.getAttachedTasks().getValue();
-                        List<String> attachAttachedTaskIds = originAttachTasks
-                                .stream()
-                                .map(TaskDto::getTaskId)
-                                .toList();
-                        List<TaskDto> attachAttachedTasks = attachAttachedTaskIds.stream()
-                                .map(taskDtoMap::get)
-                                .toList();
-                        fileObjectDto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
-                                .value(
-                                        attachAttachedTasks.stream()
-                                                .map(newTask -> new TaskOnFileObjectDto(newTask, originAttachTasks.stream()
-                                                        .filter(origin -> origin.getTaskId().equals(newTask.getTaskId()))
-                                                        .findFirst()
-                                                        .orElse(null)))
-                                                .toList()
-                                )
-                                .build()
-                        );
-                        ListRelation<TaskOnFileObjectDto> tasksRelation = retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(fileObjectDto);
-                        retriever.getAttachedTasksRelationRetriever().getChain().forEach(subRetriever -> {
-                            if (subRetriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                                // TODO: Implement this
-                            }
-                        });
-                    }
-                    break;
-            }
+            TaskCompositionHelper.preAttachToFileObject(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    List.of(fileObjectDto)
+            );
+            Map<String, TaskDto> taskDtoMap = TaskCompositionHelper.createTaskDtoMap(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    retriever.getAttachedTasksRelationRetriever().getIdRetriever().apply(fileObjectDto),
+                    retriever.getAttachedTasksRelationRetriever().getChain()
+            );
+            this.attachRelationToTasks(
+                    operatorId,
+                    cache,
+                    fileObjectDto,
+                    taskDtoMap,
+                    retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(fileObjectDto),
+                    retriever.getAttachedTasksRelationRetriever().getChain()
+            );
         }
     }
 
     public void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<FileObjectDto> fileObjectDto) {
         // AttachedTasks
         if (retriever.getAttachedTasksRelationRetriever() != null) {
-            int need = 0;
-            for (TaskRetriever subRetriever : retriever.getAttachedTasksRelationRetriever().getChain()) {
-                if (subRetriever != null && subRetriever.getAttachmentsRelationRetriever() != null) {
-                    need |= NEED_TASK_ATTACHED_FILE_OBJECTS;
-                }
-            }
-            List<String> taskIds = new ArrayList<>();
-            Map<String, TaskDto> taskDtoMap = new HashMap<>();
-            List<TaskDto> task = new ArrayList<>();
-            List<String> needRetrieveAttachedTaskIds = new ArrayList<>();
+            TaskCompositionHelper.preAttachToFileObject(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    fileObjectDto
+            );
 
-            switch (need) {
-                case GET_TASK_ATTACHED_FILE_OBJECTS:
-                    for (FileObjectDto dto : fileObjectDto) {
-                        List<String> ids = retriever.getAttachedTasksRelationRetriever().getIdRetriever().apply(dto);
-                        taskIds.addAll(ids);
-                    }
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTaskWithAttachments(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTaskWithAttachments(taskId)));
-                            break;
-                        } else {
-                            needRetrieveAttachedTaskIds.add(taskId);
-                        }
-                    }
+            Map<String, TaskDto> taskDtoMap = TaskCompositionHelper.createTaskDtoMap(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    fileObjectDto.stream()
+                            .map(retriever.getAttachedTasksRelationRetriever().getIdRetriever())
+                            .flatMap(List::stream)
+                            .toList(),
+                    retriever.getAttachedTasksRelationRetriever().getChain()
+            );
 
-                    if (!needRetrieveAttachedTaskIds.isEmpty()) {
-                        task = taskQueryProxy.getPluralTasksWithAttachments(
-                                operatorId,
-                                needRetrieveAttachedTaskIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (TaskDto dto : task) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTaskWithAttachments(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-
-                    for (FileObjectDto dto : fileObjectDto) {
-                        if (dto.getAttachedTasks().isHasValue()) {
-                            List<TaskOnFileObjectDto> originAttachTasks = dto.getAttachedTasks().getValue();
-                            List<String> attachAttachedTaskIds = originAttachTasks
-                                    .stream()
-                                    .map(TaskDto::getTaskId)
-                                    .toList();
-                            List<TaskDto> attachAttachedTasks = attachAttachedTaskIds.stream()
-                                    .map(taskDtoMap::get)
-                                    .toList();
-                            dto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
-                                    .value(
-                                            attachAttachedTasks.stream()
-                                                    .map(newTask -> new TaskOnFileObjectDto(newTask, originAttachTasks.stream()
-                                                            .filter(origin -> origin.getTaskId().equals(newTask.getTaskId()))
-                                                            .findFirst()
-                                                            .orElse(null)))
-                                                    .toList()
-                                    )
-                                    .build()
-                            );
-                            ListRelation<TaskOnFileObjectDto> tasksRelation = retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(dto);
-                            retriever.getAttachedTasksRelationRetriever().getChain().forEach(subRetriever -> {
-                                if (subRetriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                                    // TODO: Implement this
-                                }
-                            });
-                        }
-                    }
-                    break;
-                default:
-                    for (FileObjectDto dto : fileObjectDto) {
-                        List<String> ids = retriever.getAttachedTasksRelationRetriever().getIdRetriever().apply(dto);
-                        taskIds.addAll(ids);
-                    }
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTask(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTask(taskId)));
-                            break;
-                        } else {
-                            needRetrieveAttachedTaskIds.add(taskId);
-                        }
-                    }
-                    task = taskQueryProxy.getPluralTasks(
-                            operatorId,
-                            needRetrieveAttachedTaskIds,
-                            null,
-                            null
-                    ).getListData();
-                    for (TaskDto dto : task) {
-                        taskDtoMap.put(dto.getTaskId(), dto);
-                        cache.getCache().put(TaskHasher.hashTask(dto.getTaskId()), dto.deepClone());
-                    }
-                    for (FileObjectDto dto : fileObjectDto) {
-                        if (dto.getAttachedTasks().isHasValue()) {
-                            List<TaskOnFileObjectDto> originAttachTasks = dto.getAttachedTasks().getValue();
-                            List<String> attachAttachedTaskIds = originAttachTasks
-                                    .stream()
-                                    .map(TaskDto::getTaskId)
-                                    .toList();
-                            List<TaskDto> attachAttachedTasks = attachAttachedTaskIds.stream()
-                                    .map(taskDtoMap::get)
-                                    .toList();
-                            dto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
-                                    .value(
-                                            attachAttachedTasks.stream()
-                                                    .map(newTask -> new TaskOnFileObjectDto(newTask, originAttachTasks.stream()
-                                                            .filter(origin -> origin.getTaskId().equals(newTask.getTaskId()))
-                                                            .findFirst()
-                                                            .orElse(null)))
-                                                    .toList()
-                                    )
-                                    .build()
-                            );
-                            ListRelation<TaskOnFileObjectDto> tasksRelation = retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(dto);
-                            retriever.getAttachedTasksRelationRetriever().getChain().forEach(subRetriever -> {
-                                if (subRetriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                                    // TODO: Implement this
-                                }
-                            });
-                        }
-                    }
-                    break;
+            for (FileObjectDto dto : fileObjectDto) {
+                this.attachRelationToTasks(
+                        operatorId,
+                        cache,
+                        dto,
+                        taskDtoMap,
+                        retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(dto),
+                        retriever.getAttachedTasksRelationRetriever().getChain()
+                );
             }
         }
+    }
+
+//    public void attachList(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<List<FileObjectDto>> fileObjectDto) {
+//        // AttachedTasks
+//        if (retriever.getAttachedTasksRelationRetriever() != null) {
+//            TaskCompositionHelper.preAttachToFileObject(
+//                    taskQueryProxy,
+//                    cache,
+//                    operatorId,
+//                    fileObjectDto.stream().flatMap(List::stream).toList()
+//            );
+//
+//            Map<String, TaskDto> taskDtoMap = TaskCompositionHelper.createTaskDtoMap(
+//                    taskQueryProxy,
+//                    cache,
+//                    operatorId,
+//                    fileObjectDto.stream()
+//                            .flatMap(List::stream)
+//                            .map(retriever.getAttachedTasksRelationRetriever().getIdRetriever())
+//                            .flatMap(List::stream)
+//                            .toList(),
+//                    retriever.getAttachedTasksRelationRetriever().getChain()
+//            );
+//
+//            for (FileObjectDto dto : fileObjectDto.stream().flatMap(List::stream).toList()) {
+//                this.attachRelationToTasks(
+//                        operatorId,
+//                        cache,
+//                        dto,
+//                        taskDtoMap,
+//                        retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(dto),
+//                        retriever.getAttachedTasksRelationRetriever().getChain()
+//                );
+//            }
+//        }
+//    }
+
+    private void internalAttachRelationToTasks(
+            FileObjectDto fileObjectDto,
+            Map<String, TaskDto> taskDtoMap
+    ) {
+        if(fileObjectDto.getAttachedTasks().isHasValue()) {
+            List<TaskOnFileObjectDto> originAttachTasks = fileObjectDto.getAttachedTasks().getValue();
+            List<String> attachAttachedTaskIds = originAttachTasks
+                    .stream()
+                    .map(TaskDto::getTaskId)
+                    .toList();
+            List<TaskDto> attachAttachedTasks = attachAttachedTaskIds.stream()
+                    .map(taskDtoMap::get)
+                    .toList();
+            fileObjectDto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
+                    .value(
+                            attachAttachedTasks.stream()
+                                    .map(newTask -> new TaskOnFileObjectDto(newTask, originAttachTasks.stream()
+                                            .filter(origin -> origin.getTaskId().equals(newTask.getTaskId()))
+                                            .findFirst()
+                                            .orElse(null)))
+                                    .toList()
+                    )
+                    .build()
+            );
+        }
+    }
+
+    protected void attachRelationToTasks(
+            String operatorId,
+            RetrievedCacheContainer cache,
+            FileObjectDto fileObjectDto,
+            Map<String, TaskDto> taskDtoMap,
+            ListRelation<TaskOnFileObjectDto> tasksRelation,
+            List<TaskRetriever> retrievers
+    ) {
+        this.internalAttachRelationToTasks(fileObjectDto, taskDtoMap);
+        if(fileObjectDto.getAttachedTasks().isHasValue()) {
+            retrievers.forEach(retriever -> {
+                if (retriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
+                    // TODO: Implement this
+//                    var a = new AttachRelationFileObject(taskQueryProxy);
+//                    a.attach(operatorId, cache, retriever, tasksRelation.getValue());
+                }
+            });
+        }
+    }
+
+    protected void attachRelationToTasks(
+            String operatorId,
+            RetrievedCacheContainer cache,
+            List<FileObjectDto> fileObjectDto,
+            Map<String, TaskDto> taskDtoMap,
+            List<ListRelation<TaskOnFileObjectDto>> tasksRelation,
+            List<TaskRetriever> retrievers
+    ) {
+        for (FileObjectDto dto : fileObjectDto) {
+            this.internalAttachRelationToTasks(dto, taskDtoMap);
+        }
+        retrievers.forEach(retriever -> {
+            List<List<TaskOnFileObjectDto>> tasksRelationList = tasksRelation.stream()
+                    .filter(ListRelation::isHasValue)
+                    .map(ListRelation::getValue)
+                    .toList();
+//            var a = new AttachRelationFileObject(taskQueryProxy);
+//            a.attach(operatorId, cache, retriever, tasksRelationList.stream().flatMap(List::stream).toList());
+//            if (retriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
+//                // TODO: Implement this
+//            }
+        });
     }
 }

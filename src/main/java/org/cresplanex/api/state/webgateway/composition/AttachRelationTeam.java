@@ -1,7 +1,6 @@
 package org.cresplanex.api.state.webgateway.composition;
 
 import lombok.RequiredArgsConstructor;
-import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.Relation;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
@@ -9,9 +8,6 @@ import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnTeamDto;
-import org.cresplanex.api.state.webgateway.hasher.OrganizationHasher;
-import org.cresplanex.api.state.webgateway.hasher.TaskHasher;
-import org.cresplanex.api.state.webgateway.hasher.UserProfileHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.OrganizationQueryProxy;
 import org.cresplanex.api.state.webgateway.proxy.query.TaskQueryProxy;
 import org.cresplanex.api.state.webgateway.proxy.query.UserProfileQueryProxy;
@@ -19,9 +15,8 @@ import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.OrganizationRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TeamRetriever;
+import org.cresplanex.api.state.webgateway.retriever.domain.UserProfileRetriever;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,209 +27,73 @@ public class AttachRelationTeam {
     private final OrganizationQueryProxy organizationQueryProxy;
     private final TaskQueryProxy taskQueryProxy;
 
-    public static final int NEED_ORGANIZATION_USERS = 1 << 0;
-    public static final int NEED_TASK_ATTACHED_FILE_OBJECTS = 1 << 0;
-
-    public static final int GET_ORGANIZATION_WITH_USERS = NEED_ORGANIZATION_USERS;
-    public static final int GET_TASK_ATTACHED_FILE_OBJECTS = NEED_TASK_ATTACHED_FILE_OBJECTS;
-
     public void attach(String operatorId, RetrievedCacheContainer cache, TeamRetriever retriever, TeamDto teamDto) {
 
         // Organization
         if (retriever.getOrganizationRelationRetriever() != null) {
-            // 取得が必要なIDの取得
             String organizationId = retriever.getOrganizationRelationRetriever().getIdRetriever().apply(teamDto);
-            // 取得を行う
-            // サービス内でのリレーション取得が必要な場合は, ここで取得する必要がある.
-            int need = 0;
-            for (OrganizationRetriever subRetriever : retriever.getOrganizationRelationRetriever().getChain()) {
-                if (subRetriever != null && subRetriever.getUsersRelationRetriever() != null) {
-                    need |= NEED_ORGANIZATION_USERS;
-                }
-            }
-            OrganizationDto organizationDto;
-            switch (need) {
-                case GET_ORGANIZATION_WITH_USERS:
-                    if (cache.getCache().containsKey(OrganizationHasher.hashOrganizationWithUsers(organizationId))) {
-                        organizationDto = (OrganizationDto) cache.getCache().get(OrganizationHasher.hashOrganizationWithUsers(organizationId));
-                        break;
-                    }
-                    List<OrganizationDto> organizations = organizationQueryProxy.getPluralOrganizationsWithUsers(
-                            operatorId,
-                            List.of(organizationId),
-                            null,
-                            null
-                    ).getListData();
-                    if (organizations.isEmpty()) {
-                        organizationDto = null;
-                        break;
-                    }
-                    organizationDto = organizations.getFirst();
-                    cache.getCache().put(OrganizationHasher.hashOrganizationWithUsers(organizationId), organizationDto.deepClone());
-                    break;
-                default:
-                    if (cache.getCache().containsKey(OrganizationHasher.hashOrganization(organizationId))) {
-                        organizationDto = (OrganizationDto) cache.getCache().get(OrganizationHasher.hashOrganization(organizationId));
-                        break;
-                    }
-                    ListResponseDto.InternalData<OrganizationDto> organization = organizationQueryProxy.getPluralOrganizations(
-                            operatorId,
-                            List.of(organizationId),
-                            null,
-                            null
-                    );
-                    organizationDto = organization.getListData().getFirst();
-                    cache.getCache().put(OrganizationHasher.hashOrganization(organizationId), organizationDto.deepClone());
-                    break;
-            }
-            teamDto.setOrganization(Relation.<OrganizationDto>builder()
-                    .hasValue(true)
-                    .value(organizationDto)
-                    .build()
+            Map<String, OrganizationDto> organizationDtoMap = OrganizationCompositionHelper.createOrganizationDtoMap(
+                    organizationQueryProxy,
+                    cache,
+                    operatorId,
+                    List.of(organizationId),
+                    retriever.getOrganizationRelationRetriever().getChain()
             );
-            Relation<OrganizationDto> organizationRelation = retriever.getOrganizationRelationRetriever().getRelationRetriever().apply(teamDto);
-            retriever.getOrganizationRelationRetriever().getChain().forEach(subRetriever -> {
-                if (subRetriever != null && organizationRelation.isHasValue() && organizationRelation.getValue() != null) {
-                    // TODO: Implement this
-                }
-            });
+            this.attachRelationToOrganization(
+                    operatorId,
+                    cache,
+                    teamDto,
+                    organizationDtoMap,
+                    organizationId,
+                    retriever.getOrganizationRelationRetriever().getRelationRetriever().apply(teamDto),
+                    retriever.getOrganizationRelationRetriever().getChain()
+            );
         }
 
         // Users
         if (retriever.getUsersRelationRetriever() != null) {
-            // 取得が必要なIDの取得
-            List<String> userIds = retriever.getUsersRelationRetriever().getIdRetriever().apply(teamDto);
-            List<String> needRetrieveUserIds = new ArrayList<>();
-            Map<String, UserProfileDto> userProfileDtoMap = new HashMap<>();
-            for (String userId : userIds) {
-                if (cache.getCache().containsKey(UserProfileHasher.hashUserProfileByUserId(userId))) {
-                    userProfileDtoMap.put(userId, (UserProfileDto) cache.getCache().get(UserProfileHasher.hashUserProfileByUserId(userId)));
-                    break;
-                }else {
-                    needRetrieveUserIds.add(userId);
-                }
-            }
-
-            if (!needRetrieveUserIds.isEmpty()) {
-                List<UserProfileDto> userProfile = userProfileQueryProxy.getPluralUserProfilesByUserIds(
-                        operatorId,
-                        needRetrieveUserIds,
-                        null,
-                        null
-                ).getListData();
-                for (UserProfileDto dto : userProfile) {
-                    userProfileDtoMap.put(dto.getUserId(), dto);
-                    cache.getCache().put(UserProfileHasher.hashUserProfileByUserId(dto.getUserId()), dto.deepClone());
-                }
-            }
-
-            if(teamDto.getUsers().isHasValue()) {
-                List<UserProfileOnTeamDto> originAttachUserProfiles = teamDto.getUsers().getValue();
-                List<String> attachUserIds = originAttachUserProfiles
-                        .stream()
-                        .map(UserProfileDto::getUserId)
-                        .toList();
-                List<UserProfileDto> attachUserProfiles = attachUserIds.stream()
-                        .map(userProfileDtoMap::get)
-                        .toList();
-                teamDto.setUsers(ListRelation.<UserProfileOnTeamDto>builder()
-                        .value(
-                                attachUserProfiles.stream()
-                                .map(user -> new UserProfileOnTeamDto(user, originAttachUserProfiles.stream()
-                                        .filter(origin -> origin.getUserId().equals(user.getUserId()))
-                                        .findFirst()
-                                        .orElse(null)))
-                                .toList()
-                        )
-                        .build()
-                );
-                ListRelation<UserProfileOnTeamDto> usersRelation = retriever.getUsersRelationRetriever().getRelationRetriever().apply(teamDto);
-                retriever.getUsersRelationRetriever().getChain().forEach(subRetriever -> {
-                    if (subRetriever != null && usersRelation.isHasValue() && usersRelation.getValue() != null) {
-                        // TODO: Implement this
-                    }
-                });
-            }
+            Map<String, UserProfileDto> userProfileDtoMap = UserProfileCompositionHelper.createUserProfileDtoMap(
+                    userProfileQueryProxy,
+                    cache,
+                    operatorId,
+                    retriever.getUsersRelationRetriever().getIdRetriever().apply(teamDto),
+                    retriever.getUsersRelationRetriever().getChain()
+            );
+            this.attachRelationToUsers(
+                    operatorId,
+                    cache,
+                    teamDto,
+                    userProfileDtoMap,
+                    retriever.getUsersRelationRetriever().getRelationRetriever().apply(teamDto),
+                    retriever.getUsersRelationRetriever().getChain()
+            );
         }
 
         // tasks
         if (retriever.getTasksRelationRetriever() != null) {
-            int need = 0;
-            for (TaskRetriever subRetriever : retriever.getTasksRelationRetriever().getChain()) {
-                if (subRetriever != null && subRetriever.getAttachmentsRelationRetriever() != null) {
-                    need |= NEED_TASK_ATTACHED_FILE_OBJECTS;
-                }
-            }
-
-            // 取得が必要なIDの取得
-            List<String> taskIds = retriever.getTasksRelationRetriever().getIdRetriever().apply(teamDto);
-            List<String> needRetrieveTaskIds = new ArrayList<>();
-            Map<String, TaskDto> taskDtoMap = new HashMap<>();
-            List<TaskDto> tasks;
-
-            switch (need) {
-                case GET_TASK_ATTACHED_FILE_OBJECTS:
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTaskWithAttachments(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTaskWithAttachments(taskId)));
-                            break;
-                        } else {
-                            needRetrieveTaskIds.add(taskId);
-                        }
-                    }
-
-                    if (!needRetrieveTaskIds.isEmpty()) {
-                        tasks = taskQueryProxy.getPluralTasksWithAttachments(
-                                operatorId,
-                                needRetrieveTaskIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (TaskDto dto : tasks) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTaskWithAttachments(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-                    break;
-                default:
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTask(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTask(taskId)));
-                            break;
-                        } else {
-                            needRetrieveTaskIds.add(taskId);
-                        }
-                    }
-
-                    if (!needRetrieveTaskIds.isEmpty()) {
-                        tasks = taskQueryProxy.getPluralTasks(
-                                operatorId,
-                                needRetrieveTaskIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (TaskDto dto : tasks) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTask(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-                    break;
-            }
-
-            teamDto.setTasks(ListRelation.<TaskDto>builder()
-                    .value(
-                            taskIds.stream()
-                                    .map(taskDtoMap::get)
-                                    .toList()
-                    )
-                    .build()
+            TaskCompositionHelper.preAttachToTeam(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    List.of(teamDto)
             );
-            ListRelation<TaskDto> tasksRelation = retriever.getTasksRelationRetriever().getRelationRetriever().apply(teamDto);
-            retriever.getTasksRelationRetriever().getChain().forEach(subRetriever -> {
-                if (subRetriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                    // TODO: Implement this
-                }
-            });
+
+            Map<String, TaskDto> taskDtoMap = TaskCompositionHelper.createTaskDtoMap(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    retriever.getTasksRelationRetriever().getIdRetriever().apply(teamDto),
+                    retriever.getTasksRelationRetriever().getChain()
+            );
+
+            this.attachRelationToTasks(
+                    operatorId,
+                    cache,
+                    teamDto,
+                    taskDtoMap,
+                    retriever.getTasksRelationRetriever().getRelationRetriever().apply(teamDto),
+                    retriever.getTasksRelationRetriever().getChain()
+            );
         }
     }
 
@@ -242,222 +101,174 @@ public class AttachRelationTeam {
 
         // Organization
         if (retriever.getOrganizationRelationRetriever() != null) {
-            int need = 0;
-            for (OrganizationRetriever subRetriever : retriever.getOrganizationRelationRetriever().getChain()) {
-                if (subRetriever != null && subRetriever.getUsersRelationRetriever() != null) {
-                    need |= NEED_ORGANIZATION_USERS;
-                }
-            }
-            Map<String, OrganizationDto> organizationDtoMap = new HashMap<>();
-            List<String> needRetrieveOrganizationIds = new ArrayList<>();
-            List<OrganizationDto> organizations;
-            switch (need) {
-                case GET_ORGANIZATION_WITH_USERS:
-                    for (TeamDto dto : teamDto) {
-                        String organizationId = retriever.getOrganizationRelationRetriever().getIdRetriever().apply(dto);
-                        if (cache.getCache().containsKey(OrganizationHasher.hashOrganizationWithUsers(organizationId))) {
-                            organizationDtoMap.put(organizationId, (OrganizationDto) cache.getCache().get(OrganizationHasher.hashOrganizationWithUsers(organizationId)));
-                        } else {
-                            needRetrieveOrganizationIds.add(organizationId);
-                        }
-                    }
-                    if (!needRetrieveOrganizationIds.isEmpty()) {
-                        organizations = organizationQueryProxy.getPluralOrganizationsWithUsers(
-                                operatorId,
-                                needRetrieveOrganizationIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (OrganizationDto dto : organizations) {
-                            organizationDtoMap.put(dto.getOrganizationId(), dto);
-                            cache.getCache().put(OrganizationHasher.hashOrganizationWithUsers(dto.getOrganizationId()), dto.deepClone());
-                        }
-                    }
-                    break;
-                default:
-                    for (TeamDto dto : teamDto) {
-                        String organizationId = retriever.getOrganizationRelationRetriever().getIdRetriever().apply(dto);
-                        if (cache.getCache().containsKey(OrganizationHasher.hashOrganization(organizationId))) {
-                            organizationDtoMap.put(organizationId, (OrganizationDto) cache.getCache().get(OrganizationHasher.hashOrganization(organizationId)));
-                        } else {
-                            needRetrieveOrganizationIds.add(organizationId);
-                        }
-                    }
-                    if (!needRetrieveOrganizationIds.isEmpty()) {
-                        organizations = organizationQueryProxy.getPluralOrganizations(
-                                operatorId,
-                                needRetrieveOrganizationIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (OrganizationDto dto : organizations) {
-                            organizationDtoMap.put(dto.getOrganizationId(), dto);
-                            cache.getCache().put(OrganizationHasher.hashOrganization(dto.getOrganizationId()), dto.deepClone());
-                        }
-                    }
-                    break;
-            }
+
+            Map<String, OrganizationDto> organizationDtoMap = OrganizationCompositionHelper.createOrganizationDtoMap(
+                    organizationQueryProxy,
+                    cache,
+                    operatorId,
+                    teamDto.stream()
+                            .map(retriever.getOrganizationRelationRetriever().getIdRetriever())
+                            .toList(),
+                    retriever.getOrganizationRelationRetriever().getChain()
+            );
 
             for (TeamDto dto : teamDto) {
-                String organizationId = retriever.getOrganizationRelationRetriever().getIdRetriever().apply(dto);
-                OrganizationDto organizationDto = organizationDtoMap.get(organizationId);
-                dto.setOrganization(Relation.<OrganizationDto>builder()
-                        .hasValue(true)
-                        .value(organizationDto)
-                        .build()
+                this.attachRelationToOrganization(
+                        operatorId,
+                        cache,
+                        dto,
+                        organizationDtoMap,
+                        retriever.getOrganizationRelationRetriever().getIdRetriever().apply(dto),
+                        retriever.getOrganizationRelationRetriever().getRelationRetriever().apply(dto),
+                        retriever.getOrganizationRelationRetriever().getChain()
                 );
-                Relation<OrganizationDto> organizationRelation = retriever.getOrganizationRelationRetriever().getRelationRetriever().apply(dto);
-                retriever.getOrganizationRelationRetriever().getChain().forEach(subRetriever -> {
-                    if (subRetriever != null && organizationRelation.isHasValue() && organizationRelation.getValue() != null) {
-                        // TODO: Implement this
-                    }
-                });
             }
         }
 
         // Users
         if (retriever.getUsersRelationRetriever() != null) {
-            List<String> userIds = new ArrayList<>();
-            Map<String, UserProfileDto> userProfileDtoMap = new HashMap<>();
-            for (TeamDto dto : teamDto) {
-                List<String> ids = retriever.getUsersRelationRetriever().getIdRetriever().apply(dto);
-                userIds.addAll(ids);
-            }
-            List<String> needRetrieveUserIds = new ArrayList<>();
-            for (String userId : userIds) {
-                if (cache.getCache().containsKey(UserProfileHasher.hashUserProfileByUserId(userId))) {
-                    userProfileDtoMap.put(userId, (UserProfileDto) cache.getCache().get(UserProfileHasher.hashUserProfileByUserId(userId)));
-                    break;
-                } else {
-                    needRetrieveUserIds.add(userId);
-                }
-            }
+            Map<String, UserProfileDto> userProfileDtoMap = UserProfileCompositionHelper.createUserProfileDtoMap(
+                    userProfileQueryProxy,
+                    cache,
+                    operatorId,
+                    teamDto.stream()
+                            .map(retriever.getUsersRelationRetriever().getIdRetriever())
+                            .flatMap(List::stream)
+                            .toList(),
+                    retriever.getUsersRelationRetriever().getChain()
+            );
 
-            if (!needRetrieveUserIds.isEmpty()) {
-                List<UserProfileDto> userProfile = userProfileQueryProxy.getPluralUserProfilesByUserIds(
+            for (TeamDto dto : teamDto) {
+
+                this.attachRelationToUsers(
                         operatorId,
-                        needRetrieveUserIds,
-                        null,
-                        null
-                ).getListData();
-                for (UserProfileDto dto : userProfile) {
-                    userProfileDtoMap.put(dto.getUserId(), dto);
-                    cache.getCache().put(UserProfileHasher.hashUserProfileByUserId(dto.getUserId()), dto.deepClone());
-                }
-            }
-
-            for (TeamDto dto : teamDto) {
-                List<UserProfileOnTeamDto> originAttachUserProfiles = dto.getUsers().getValue();
-                List<String> attachUserIds = originAttachUserProfiles
-                        .stream()
-                        .map(UserProfileDto::getUserId)
-                        .toList();
-                List<UserProfileDto> attachUserProfiles = attachUserIds.stream()
-                        .map(userProfileDtoMap::get)
-                        .toList();
-                dto.setUsers(ListRelation.<UserProfileOnTeamDto>builder()
-                        .value(
-                                attachUserProfiles.stream()
-                                        .map(user -> new UserProfileOnTeamDto(user, originAttachUserProfiles.stream()
-                                                .filter(origin -> origin.getUserId().equals(user.getUserId()))
-                                                .findFirst()
-                                                .orElse(null)))
-                                        .toList()
-                        )
-                        .build()
+                        cache,
+                        dto,
+                        userProfileDtoMap,
+                        retriever.getUsersRelationRetriever().getRelationRetriever().apply(dto),
+                        retriever.getUsersRelationRetriever().getChain()
                 );
-                ListRelation<UserProfileOnTeamDto> usersRelation = retriever.getUsersRelationRetriever().getRelationRetriever().apply(dto);
-                retriever.getUsersRelationRetriever().getChain().forEach(subRetriever -> {
-                    if (subRetriever != null && usersRelation.isHasValue() && usersRelation.getValue() != null) {
-                        // TODO: Implement this
-                    }
-                });
             }
         }
 
         // tasks
         if (retriever.getTasksRelationRetriever() != null) {
-            int need = 0;
-            for (TaskRetriever subRetriever : retriever.getTasksRelationRetriever().getChain()) {
-                if (subRetriever != null && subRetriever.getAttachmentsRelationRetriever() != null) {
-                    need |= NEED_TASK_ATTACHED_FILE_OBJECTS;
-                }
-            }
 
-            List<String> taskIds = new ArrayList<>();
-            Map<String, TaskDto> taskDtoMap = new HashMap<>();
-            for (TeamDto dto : teamDto) {
-                List<String> ids = retriever.getTasksRelationRetriever().getIdRetriever().apply(dto);
-                taskIds.addAll(ids);
-            }
-            List<String> needRetrieveTaskIds = new ArrayList<>();
-            List<TaskDto> tasks;
+            TaskCompositionHelper.preAttachToTeam(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    teamDto
+            );
 
-            switch (need) {
-                case GET_TASK_ATTACHED_FILE_OBJECTS:
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTaskWithAttachments(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTaskWithAttachments(taskId)));
-                            break;
-                        } else {
-                            needRetrieveTaskIds.add(taskId);
-                        }
-                    }
-
-                    if (!needRetrieveTaskIds.isEmpty()) {
-                        tasks = taskQueryProxy.getPluralTasksWithAttachments(
-                                operatorId,
-                                needRetrieveTaskIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (TaskDto dto : tasks) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTaskWithAttachments(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-                    break;
-                default:
-                    for (String taskId : taskIds) {
-                        if (cache.getCache().containsKey(TaskHasher.hashTask(taskId))) {
-                            taskDtoMap.put(taskId, (TaskDto) cache.getCache().get(TaskHasher.hashTask(taskId)));
-                            break;
-                        } else {
-                            needRetrieveTaskIds.add(taskId);
-                        }
-                    }
-
-                    if (!needRetrieveTaskIds.isEmpty()) {
-                        tasks = taskQueryProxy.getPluralTasks(
-                                operatorId,
-                                needRetrieveTaskIds,
-                                null,
-                                null
-                        ).getListData();
-                        for (TaskDto dto : tasks) {
-                            taskDtoMap.put(dto.getTaskId(), dto);
-                            cache.getCache().put(TaskHasher.hashTask(dto.getTaskId()), dto.deepClone());
-                        }
-                    }
-                    break;
-            }
+            Map<String, TaskDto> taskDtoMap = TaskCompositionHelper.createTaskDtoMap(
+                    taskQueryProxy,
+                    cache,
+                    operatorId,
+                    teamDto.stream()
+                            .map(retriever.getTasksRelationRetriever().getIdRetriever())
+                            .flatMap(List::stream)
+                            .toList(),
+                    retriever.getTasksRelationRetriever().getChain()
+            );
 
             for (TeamDto dto : teamDto) {
-                dto.setTasks(ListRelation.<TaskDto>builder()
-                        .value(
-                                taskIds.stream()
-                                        .map(taskDtoMap::get)
-                                        .toList()
-                        )
-                        .build()
+
+                this.attachRelationToTasks(
+                        operatorId,
+                        cache,
+                        dto,
+                        taskDtoMap,
+                        retriever.getTasksRelationRetriever().getRelationRetriever().apply(dto),
+                        retriever.getTasksRelationRetriever().getChain()
                 );
-                ListRelation<TaskDto> tasksRelation = retriever.getTasksRelationRetriever().getRelationRetriever().apply(dto);
-                retriever.getTasksRelationRetriever().getChain().forEach(subRetriever -> {
-                    if (subRetriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                        // TODO: Implement this
-                    }
-                });
             }
+        }
+    }
+
+    protected void attachRelationToOrganization(
+            String operatorId,
+            RetrievedCacheContainer cache,
+            TeamDto teamDto,
+            Map<String, OrganizationDto> organizationDtoMap,
+            String organizationId,
+            Relation<OrganizationDto> organizationRelation,
+            List<OrganizationRetriever> retrievers
+    ) {
+        teamDto.setOrganization(Relation.<OrganizationDto>builder()
+                .hasValue(true)
+                .value(organizationDtoMap.get(organizationId))
+                .build()
+        );
+        retrievers.forEach(retriever -> {
+            if (retriever != null && organizationRelation.isHasValue() && organizationRelation.getValue() != null) {
+                // TODO: Implement this
+            }
+        });
+    }
+
+    protected void attachRelationToUsers(
+            String operatorId,
+            RetrievedCacheContainer cache,
+            TeamDto teamDto,
+            Map<String, UserProfileDto> userProfileDtoMap,
+            ListRelation<UserProfileOnTeamDto> usersRelation,
+            List<UserProfileRetriever> retrievers
+    ) {
+        if(teamDto.getUsers().isHasValue()) {
+            List<UserProfileOnTeamDto> originAttachUserProfiles = teamDto.getUsers().getValue();
+            List<String> attachUserIds = originAttachUserProfiles
+                    .stream()
+                    .map(UserProfileOnTeamDto::getUserId)
+                    .toList();
+            List<UserProfileDto> attachUserProfiles = attachUserIds.stream()
+                    .map(userProfileDtoMap::get)
+                    .toList();
+            teamDto.setUsers(ListRelation.<UserProfileOnTeamDto>builder()
+                    .value(
+                            attachUserProfiles.stream()
+                                    .map(user -> new UserProfileOnTeamDto(user, originAttachUserProfiles.stream()
+                                            .filter(origin -> origin.getUserId().equals(user.getUserId()))
+                                            .findFirst()
+                                            .orElse(null)))
+                                    .toList()
+                    )
+                    .build()
+            );
+            retrievers.forEach(retriever -> {
+                if (retriever != null && usersRelation.isHasValue() && usersRelation.getValue() != null) {
+                    // TODO: Implement this
+                }
+            });
+        }
+    }
+
+    protected void attachRelationToTasks(
+            String operatorId,
+            RetrievedCacheContainer cache,
+            TeamDto teamDto,
+            Map<String, TaskDto> taskDtoMap,
+            ListRelation<TaskDto> tasksRelation,
+            List<TaskRetriever> retrievers
+    ) {
+        if (teamDto.getTasks().isHasValue()) {
+            List<TaskDto> originAttachTasks = teamDto.getTasks().getValue();
+            List<String> attachTaskIds = originAttachTasks
+                    .stream()
+                    .map(TaskDto::getTaskId)
+                    .toList();
+            List<TaskDto> attachTasks = attachTaskIds.stream()
+                    .map(taskDtoMap::get)
+                    .toList();
+            teamDto.setTasks(ListRelation.<TaskDto>builder()
+                    .value(attachTasks)
+                    .build()
+            );
+            retrievers.forEach(retriever -> {
+                if (retriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
+                    // TODO: Implement this
+                }
+            });
         }
     }
 }

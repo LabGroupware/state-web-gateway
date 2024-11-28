@@ -21,7 +21,7 @@ public class UserProfileRetrieveResolver {
         if (!result.userPreferenceRelationPath.isEmpty()) {
             userProfileRetriever.setUserPreferenceRelationRetriever(
                     RelationRetrieverBuilder.<UserPreferenceDto, UserProfileDto, UserPreferenceRetriever>builder()
-                            .idRetriever(dto -> dto.getUserPreference().isHasValue() ? dto.getUserPreference().getValue().getUserPreferenceId() : null)
+                            .idRetriever(UserProfileDto::getUserId)
                             .relationRetriever(UserProfileDto::getUserPreference)
                             .chain(
                                     result.userPreferenceRelationPath.stream()

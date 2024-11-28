@@ -34,7 +34,7 @@ public class TeamRetrieveResolver {
         if (!result.organizationRelationPath.isEmpty()) {
             teamRetriever.setOrganizationRelationRetriever(
                     RelationRetrieverBuilder.<OrganizationDto, TeamDto, OrganizationRetriever>builder()
-                            .idRetriever(dto -> dto.getOrganization().isHasValue() ? dto.getOrganization().getValue().getOrganizationId() : null)
+                            .idRetriever(TeamDto::getOrganizationId)
                             .relationRetriever(TeamDto::getOrganization)
                             .chain(
                                     result.organizationRelationPath.stream()
