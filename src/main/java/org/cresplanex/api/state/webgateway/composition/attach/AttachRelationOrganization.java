@@ -14,10 +14,12 @@ import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.OrganizationRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TeamRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.UserProfileRetriever;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
+@Component
 @RequiredArgsConstructor
 public class AttachRelationOrganization {
 

@@ -10,7 +10,6 @@ import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationD
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
-import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnOrganizationDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnTeamDto;
 import org.cresplanex.api.state.webgateway.proxy.query.*;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
@@ -18,10 +17,12 @@ import org.cresplanex.api.state.webgateway.retriever.domain.OrganizationRetrieve
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TeamRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.UserProfileRetriever;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
+@Component
 @RequiredArgsConstructor
 public class AttachRelationTeam {
 

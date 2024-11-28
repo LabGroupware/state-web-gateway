@@ -1,36 +1,83 @@
 package org.cresplanex.api.state.webgateway.composition;
 
 import lombok.RequiredArgsConstructor;
+import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationUserPreference;
+import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationUserProfile;
+import org.cresplanex.api.state.webgateway.composition.helper.UserPreferenceCompositionHelper;
+import org.cresplanex.api.state.webgateway.composition.helper.UserProfileCompositionHelper;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
-import org.cresplanex.api.state.webgateway.dto.domain.DomainDto;
-import org.cresplanex.api.state.webgateway.dto.domain.Relation;
-import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userpreference.UserPreferenceDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
-import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnTeamDto;
-import org.cresplanex.api.state.webgateway.mapper.UserProfileMapper;
-import org.cresplanex.api.state.webgateway.proxy.query.TeamQueryProxy;
 import org.cresplanex.api.state.webgateway.proxy.query.UserPreferenceQueryProxy;
 import org.cresplanex.api.state.webgateway.proxy.query.UserProfileQueryProxy;
-import org.cresplanex.api.state.webgateway.retriever.RelationRetrieverBuilder;
-import org.cresplanex.api.state.webgateway.retriever.RootRelationRetriever;
-import org.cresplanex.api.state.webgateway.retriever.RootRelationRetrieverBuilder;
+import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
+import org.cresplanex.api.state.webgateway.retriever.domain.UserPreferenceRetriever;
+import org.cresplanex.api.state.webgateway.retriever.domain.UserProfileRetriever;
+import org.cresplanex.api.state.webgateway.retriever.resolver.UserPreferenceRetrieveResolver;
+import org.cresplanex.api.state.webgateway.retriever.resolver.UserProfileRetrieveResolver;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class UserCompositionService {
 
-    private final TeamQueryProxy teamQueryProxy;
     private final UserProfileQueryProxy userProfileQueryProxy;
     private final UserPreferenceQueryProxy userPreferenceQueryProxy;
+    private final AttachRelationUserProfile attachRelationUserProfile;
+    private final AttachRelationUserPreference attachRelationUserPreference;
 
-    // 1
+    public UserProfileDto findUserProfile(String operatorId, String userId, List<String> with) {
+        UserProfileDto userProfile;
+        UserProfileRetriever userProfileRetriever = UserProfileRetrieveResolver.resolve(
+                with.toArray(new String[0])
+        );
+        int need = UserProfileCompositionHelper.calculateNeedQuery(List.of(userProfileRetriever));
+        switch (need) {
+            default:
+                userProfile = userProfileQueryProxy.findUserProfileByUserId(
+                        operatorId,
+                        userId
+                );
+                break;
+        }
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+        attachRelationUserProfile.attach(
+                operatorId,
+                cache,
+                userProfileRetriever,
+                userProfile
+        );
+
+        return userProfile;
+    }
+
+    public UserPreferenceDto findUserPreference(String operatorId, String userId, List<String> with) {
+        UserPreferenceDto userPreference;
+        UserPreferenceRetriever userPreferenceRetriever = UserPreferenceRetrieveResolver.resolve(
+                with.toArray(new String[0])
+        );
+        int need = UserPreferenceCompositionHelper.calculateNeedQuery(List.of(userPreferenceRetriever));
+        switch (need) {
+            default:
+                userPreference = userPreferenceQueryProxy.findUserPreferenceByUserId(
+                        operatorId,
+                        userId
+                );
+                break;
+        }
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+        attachRelationUserPreference.attach(
+                operatorId,
+                cache,
+                userPreferenceRetriever,
+                userPreference
+        );
+
+        return userPreference;
+    }
+
     public ListResponseDto.InternalData<UserProfileDto> getUsers(
             String operatorId,
             int limit,
@@ -39,93 +86,36 @@ public class UserCompositionService {
             String pagination,
             String sortField,
             String sortOrder,
-            boolean withCount
+            boolean withCount,
+            List<String> with
     ) {
-        return userProfileQueryProxy.getUserProfiles(
-                operatorId,
-                limit,
-                offset,
-                cursor,
-                pagination,
-                sortField,
-                sortOrder,
-                withCount
+        ListResponseDto.InternalData<UserProfileDto> userProfiles;
+        UserProfileRetriever userProfileRetriever = UserProfileRetrieveResolver.resolve(
+                with.toArray(new String[0])
         );
-    }
-
-    // 2
-    public ListResponseDto.InternalData<UserProfileDto> getUsersWithPreference(
-            String operatorId,
-            int limit,
-            int offset,
-            String cursor,
-            String pagination,
-            String sortField,
-            String sortOrder,
-            boolean withCount
-    ) {
-        ListResponseDto.InternalData<UserProfileDto> userProfileDto = userProfileQueryProxy.getUserProfiles(
+        int need = UserProfileCompositionHelper.calculateNeedQuery(List.of(userProfileRetriever));
+        switch (need) {
+            default:
+                userProfiles = userProfileQueryProxy.getUserProfiles(
+                        operatorId,
+                        limit,
+                        offset,
+                        cursor,
+                        pagination,
+                        sortField,
+                        sortOrder,
+                        withCount
+                );
+                break;
+        }
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+        attachRelationUserProfile.attach(
                 operatorId,
-                limit,
-                offset,
-                cursor,
-                pagination,
-                sortField,
-                sortOrder,
-                withCount
+                cache,
+                userProfileRetriever,
+                userProfiles.getListData()
         );
 
-
-        RootRelationRetriever<UserProfileDto> userProfileRetriever = RootRelationRetrieverBuilder.<UserProfileDto>builder()
-                .idRetriever(UserProfileDto::getUserProfileId)
-                .chain(
-                        RelationRetrieverBuilder.<UserProfileDto>builder()
-                                .idRetriever(UserProfileDto::getUserId)
-                                .relationRetriever(userProfileDto.getListData().
-                                .chain(null)
-                                .build()
-                )
-                .build();
-
-        ForUserPreferenceUtils.attachUserPreferenceToUserProfile(
-                userPreferenceQueryProxy,
-                operatorId,
-                userProfileDto
-        );
-
-        return userProfileDto;
-    }
-
-    // 2
-    public ListResponseDto.InternalData<UserProfileOnTeamDto> getUsersOnTeam(
-            String operatorId,
-            String teamId,
-            int limit,
-            int offset,
-            String cursor,
-            String pagination,
-            String sortField,
-            String sortOrder,
-            boolean withCount
-    ) {
-        ListResponseDto.InternalData<UserProfileOnTeamDto> users = teamQueryProxy.getUsersOnTeam(
-                operatorId,
-                teamId,
-                limit,
-                offset,
-                cursor,
-                pagination,
-                sortField,
-                sortOrder,
-                withCount
-        );
-
-        ForUserProfileUtils.attachUserProfileToUserProfile(
-                userProfileQueryProxy,
-                operatorId,
-                users
-        );
-
-        return users;
+        return userProfiles;
     }
 }

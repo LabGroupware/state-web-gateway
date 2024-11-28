@@ -9,6 +9,7 @@ import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.OrganizationCompositionService;
 import org.cresplanex.api.state.webgateway.dto.CommandResponseDto;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
+import org.cresplanex.api.state.webgateway.dto.ResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
 import org.cresplanex.api.state.webgateway.dto.organization.AddUsersOrganizationRequestDto;
 import org.cresplanex.api.state.webgateway.dto.organization.CreateOrganizationRequestDto;
@@ -29,9 +30,6 @@ public class OrganizationController {
 
     private final OrganizationCommandServiceProxy organizationCommandServiceProxy;
     private final OrganizationCompositionService organizationCompositionService;
-    public static final int withUsersFlag = 1;
-
-    public static final int withUsers = 1;
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> createOrganization(
@@ -84,6 +82,28 @@ public class OrganizationController {
         return ResponseEntity.ok(response);
     }
 
+    @RequestMapping(value = "/{organizationId}", method = RequestMethod.GET)
+    public ResponseEntity<ResponseDto<OrganizationDto>> findOrganization(
+            @PathVariable String organizationId,
+            @RequestParam(name = "with", required = false) List<String> with
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+
+        OrganizationDto organization = organizationCompositionService.findOrganization(
+                jwt.getSubject(),
+                organizationId,
+                with
+        );
+        ResponseDto<OrganizationDto> response = new ResponseDto<>();
+        response.setData(organization);
+        response.setSuccess(true);
+        response.setCode(WebGatewayApplicationCode.SUCCESS);
+        response.setCaption("Find Organization.");
+
+        return ResponseEntity.ok(response);
+    }
+
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<ListResponseDto<OrganizationDto>> getOrganizations(
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
@@ -104,58 +124,28 @@ public class OrganizationController {
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        int flag = 0;
 
-        for (String w : with) {
-            if (w.equals("users")) {
-                flag |= withUsersFlag;
-            }
-        }
+        ListResponseDto.InternalData<OrganizationDto> organizations = organizationCompositionService.getOrganizations(
+                jwt.getSubject(),
+                limit,
+                offset,
+                cursor,
+                pagination,
+                sortField,
+                sortOrder,
+                withCount,
+                hasOwnerFilter,
+                filterOwnerIds,
+                hasPlanFilter,
+                filterPlans,
+                hasUserFilter,
+                filterUserIds,
+                userFilterType,
+                with
+        );
 
-        ListResponseDto response = new ListResponseDto();
-
-        switch (flag) {
-            case withUsers:
-                ListResponseDto.InternalData<OrganizationDto> organizationsWithUsers = organizationCompositionService.getOrganizationsWithUsers(
-                        jwt.getSubject(),
-                        limit,
-                        offset,
-                        cursor,
-                        pagination,
-                        sortField,
-                        sortOrder,
-                        withCount,
-                        hasOwnerFilter,
-                        filterOwnerIds,
-                        hasPlanFilter,
-                        filterPlans,
-                        hasUserFilter,
-                        filterUserIds,
-                        userFilterType
-                );
-                response.setData(organizationsWithUsers);
-                break;
-            default:
-                ListResponseDto.InternalData<OrganizationDto> organizations = organizationCompositionService.getOrganizations(
-                        jwt.getSubject(),
-                        limit,
-                        offset,
-                        cursor,
-                        pagination,
-                        sortField,
-                        sortOrder,
-                        withCount,
-                        hasOwnerFilter,
-                        filterOwnerIds,
-                        hasPlanFilter,
-                        filterPlans,
-                        hasUserFilter,
-                        filterUserIds,
-                        userFilterType
-                );
-                response.setData(organizations);
-        }
-
+        ListResponseDto<OrganizationDto> response = new ListResponseDto<>();
+        response.setData(organizations);
         response.setSuccess(true);
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("Get Organizations list.");

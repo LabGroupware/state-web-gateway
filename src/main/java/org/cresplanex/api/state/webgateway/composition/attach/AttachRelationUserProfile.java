@@ -17,10 +17,12 @@ import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto
 import org.cresplanex.api.state.webgateway.proxy.query.*;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.*;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
+@Component
 @RequiredArgsConstructor
 public class AttachRelationUserProfile {
 

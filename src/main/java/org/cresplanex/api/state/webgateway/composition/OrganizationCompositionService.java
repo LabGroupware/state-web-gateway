@@ -1,28 +1,56 @@
 package org.cresplanex.api.state.webgateway.composition;
 
 import lombok.RequiredArgsConstructor;
+import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationOrganization;
+import org.cresplanex.api.state.webgateway.composition.helper.OrganizationCompositionHelper;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
-import org.cresplanex.api.state.webgateway.dto.domain.Relation;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
-import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
-import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnOrganizationDto;
 import org.cresplanex.api.state.webgateway.proxy.query.OrganizationQueryProxy;
-import org.cresplanex.api.state.webgateway.proxy.query.UserProfileQueryProxy;
+import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
+import org.cresplanex.api.state.webgateway.retriever.domain.OrganizationRetriever;
+import org.cresplanex.api.state.webgateway.retriever.resolver.OrganizationRetrieveResolver;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class OrganizationCompositionService {
 
     private final OrganizationQueryProxy organizationQueryProxy;
-    private final UserProfileQueryProxy userProfileQueryProxy;
+    private final AttachRelationOrganization attachRelationOrganization;
 
-    // 1
+    public OrganizationDto findOrganization(String operatorId, String organizationId, List<String> with) {
+        OrganizationDto organization;
+        OrganizationRetriever organizationRetriever = OrganizationRetrieveResolver.resolve(
+                with.toArray(new String[0])
+        );
+        int need = OrganizationCompositionHelper.calculateNeedQuery(List.of(organizationRetriever));
+        switch (need) {
+            case OrganizationCompositionHelper.GET_ORGANIZATION_WITH_USERS:
+                organization = organizationQueryProxy.findOrganizationWithUsers(
+                        operatorId,
+                        organizationId
+                );
+                break;
+            default:
+                organization = organizationQueryProxy.findOrganization(
+                        operatorId,
+                        organizationId
+                );
+                break;
+        }
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+        attachRelationOrganization.attach(
+                operatorId,
+                cache,
+                organizationRetriever,
+                organization
+        );
+
+        return organization;
+    }
+
     public ListResponseDto.InternalData<OrganizationDto> getOrganizations(
             String operatorId,
             int limit,
@@ -38,92 +66,61 @@ public class OrganizationCompositionService {
             List<String> filterPlans,
             boolean hasUserFilter,
             List<String> filterUserIds,
-            String userFilterType
+            String userFilterType,
+            List<String> with
     ) {
-        return organizationQueryProxy.getOrganizations(
-                operatorId,
-                limit,
-                offset,
-                cursor,
-                pagination,
-                sortField,
-                sortOrder,
-                withCount,
-                hasOwnerFilter,
-                filterOwnerIds,
-                hasPlanFilter,
-                filterPlans,
-                hasUserFilter,
-                filterUserIds,
-                userFilterType
+        ListResponseDto.InternalData<OrganizationDto> organizations;
+        OrganizationRetriever organizationRetriever = OrganizationRetrieveResolver.resolve(
+                with.toArray(new String[0])
         );
-    }
-
-    // 2
-    public ListResponseDto.InternalData<OrganizationDto> getOrganizationsWithUsers(
-            String operatorId,
-            int limit,
-            int offset,
-            String cursor,
-            String pagination,
-            String sortField,
-            String sortOrder,
-            boolean withCount,
-            boolean hasOwnerFilter,
-            List<String> filterOwnerIds,
-            boolean hasPlanFilter,
-            List<String> filterPlans,
-            boolean hasUserFilter,
-            List<String> filterUserIds,
-            String userFilterType
-    ) {
-        ListResponseDto.InternalData<OrganizationDto> organizations = organizationQueryProxy.getOrganizationsWithUsers(
+        int need = OrganizationCompositionHelper.calculateNeedQuery(List.of(organizationRetriever));
+        switch (need) {
+            case OrganizationCompositionHelper.GET_ORGANIZATION_WITH_USERS:
+                organizations = organizationQueryProxy.getOrganizationsWithUsers(
+                        operatorId,
+                        limit,
+                        offset,
+                        cursor,
+                        pagination,
+                        sortField,
+                        sortOrder,
+                        withCount,
+                        hasOwnerFilter,
+                        filterOwnerIds,
+                        hasPlanFilter,
+                        filterPlans,
+                        hasUserFilter,
+                        filterUserIds,
+                        userFilterType
+                );
+                break;
+            default:
+                organizations = organizationQueryProxy.getOrganizations(
+                        operatorId,
+                        limit,
+                        offset,
+                        cursor,
+                        pagination,
+                        sortField,
+                        sortOrder,
+                        withCount,
+                        hasOwnerFilter,
+                        filterOwnerIds,
+                        hasPlanFilter,
+                        filterPlans,
+                        hasUserFilter,
+                        filterUserIds,
+                        userFilterType
+                );
+                break;
+        }
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+        attachRelationOrganization.attach(
                 operatorId,
-                limit,
-                offset,
-                cursor,
-                pagination,
-                sortField,
-                sortOrder,
-                withCount,
-                hasOwnerFilter,
-                filterOwnerIds,
-                hasPlanFilter,
-                filterPlans,
-                hasUserFilter,
-                filterUserIds,
-                userFilterType
+                cache,
+                organizationRetriever,
+                organizations.getListData()
         );
-
-        Set<String> userIds = new java.util.HashSet<String>(Set.of());
-
-        organizations.getListData()
-                .forEach(org -> {
-                    Set<String> addIds = CommonUtils.createIdsSet(org.getUsers().getValue(), UserProfileOnOrganizationDto::getUserId);
-                    userIds.addAll(addIds);
-                });
-
-        Map<String, UserProfileDto> userProfileMap = ForUserProfileUtils.getStringUserProfileDtoMap(
-                userProfileQueryProxy,
-                operatorId,
-                userIds
-        );
-
-        organizations.getListData().forEach(org -> {
-            org.setUsers(Relation.<List<UserProfileOnOrganizationDto>>builder()
-                            .hasValue(true)
-                            .value(org.getUsers().getValue().stream()
-                                    .map(user -> {
-                                        UserProfileDto userProfile = userProfileMap.get(user.getUserId());
-                                        if (userProfile == null) {
-                                            return null;
-                                        }
-                                        return new UserProfileOnOrganizationDto(userProfile);
-                                    })
-                                    .collect(Collectors.toList())
-                            )
-                            .build());
-        });
 
         return organizations;
     }

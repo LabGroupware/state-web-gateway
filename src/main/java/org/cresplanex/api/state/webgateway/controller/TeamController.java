@@ -5,7 +5,11 @@ import build.buf.gen.team.v1.TeamUserRequestType;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
+import org.cresplanex.api.state.webgateway.composition.TeamCompositionService;
 import org.cresplanex.api.state.webgateway.dto.CommandResponseDto;
+import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
+import org.cresplanex.api.state.webgateway.dto.ResponseDto;
+import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
 import org.cresplanex.api.state.webgateway.dto.team.CreateTeamRequestDto;
 import org.cresplanex.api.state.webgateway.proxy.command.TeamCommandServiceProxy;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +26,7 @@ import java.util.List;
 public class TeamController {
 
     private final TeamCommandServiceProxy teamCommandServiceProxy;
+    private final TeamCompositionService teamCompositionService;
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> createTeam(
@@ -69,6 +74,78 @@ public class TeamController {
         response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("Team user add pending.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @RequestMapping(value = "/{teamId}", method = RequestMethod.GET)
+    public ResponseEntity<ResponseDto<TeamDto>> findTeam(
+            @PathVariable String teamId,
+            @RequestParam(name = "with", required = false) List<String> with
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+
+        TeamDto team = teamCompositionService.findTeam(
+                jwt.getSubject(),
+                teamId,
+                with
+        );
+
+        ResponseDto<TeamDto> response = new ResponseDto<>();
+        response.setData(team);
+        response.setSuccess(true);
+        response.setCode(WebGatewayApplicationCode.SUCCESS);
+        response.setCaption("Find Team.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @RequestMapping(value = "", method = RequestMethod.GET)
+    public ResponseEntity<ListResponseDto<TeamDto>> getTeams(
+            @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
+            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "pagination", required = false) String pagination,
+            @RequestParam(name = "sortField", required = false) String sortField,
+            @RequestParam(name = "sortOrder", required = false) String sortOrder,
+            @RequestParam(name = "withCount", required = false, defaultValue = "false") boolean withCount,
+            @RequestParam(name = "hasIsDefaultFilter", required = false, defaultValue = "false") boolean hasIsDefaultFilter,
+            @RequestParam(name = "filterIsDefault", required = false, defaultValue = "false") boolean filterIsDefault,
+            @RequestParam(name = "hasOrganizationFilter", required = false, defaultValue = "false") boolean hasOrganizationFilter,
+            @RequestParam(name = "filterOrganizationIds", required = false) List<String> filterOrganizationIds,
+            @RequestParam(name = "hasUserFilter", required = false, defaultValue = "false") boolean hasUserFilter,
+            @RequestParam(name = "filterUserIds", required = false) List<String> filterUserIds,
+            @RequestParam(name = "userFilterType", required = false) String userFilterType,
+            @RequestParam(name = "with", required = false) List<String> with
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+
+        ListResponseDto.InternalData<TeamDto> teams = teamCompositionService.getTeams(
+                jwt.getSubject(),
+                limit,
+                offset,
+                cursor,
+                pagination,
+                sortField,
+                sortOrder,
+                withCount,
+                hasIsDefaultFilter,
+                filterIsDefault,
+                hasOrganizationFilter,
+                filterOrganizationIds,
+                hasUserFilter,
+                filterUserIds,
+                userFilterType,
+                with
+        );
+
+        ListResponseDto<TeamDto> response = new ListResponseDto<>();
+        response.setData(teams);
+        response.setSuccess(true);
+        response.setCode(WebGatewayApplicationCode.SUCCESS);
+        response.setCaption("Get Teams.");
 
         return ResponseEntity.ok(response);
     }

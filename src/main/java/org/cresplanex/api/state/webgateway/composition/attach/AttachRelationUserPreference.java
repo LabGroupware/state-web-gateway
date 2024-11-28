@@ -5,9 +5,11 @@ import org.cresplanex.api.state.webgateway.dto.domain.userpreference.UserPrefere
 import org.cresplanex.api.state.webgateway.proxy.query.*;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.UserPreferenceRetriever;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 @RequiredArgsConstructor
 public class AttachRelationUserPreference {
 

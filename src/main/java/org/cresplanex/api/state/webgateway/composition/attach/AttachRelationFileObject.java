@@ -10,10 +10,12 @@ import org.cresplanex.api.state.webgateway.proxy.query.*;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.FileObjectRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
+@Component
 @RequiredArgsConstructor
 public class AttachRelationFileObject {
 
