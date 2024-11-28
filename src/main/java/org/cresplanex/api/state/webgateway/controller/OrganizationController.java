@@ -6,7 +6,10 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
+import org.cresplanex.api.state.webgateway.composition.OrganizationCompositionService;
 import org.cresplanex.api.state.webgateway.dto.CommandResponseDto;
+import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
+import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
 import org.cresplanex.api.state.webgateway.dto.organization.AddUsersOrganizationRequestDto;
 import org.cresplanex.api.state.webgateway.dto.organization.CreateOrganizationRequestDto;
 import org.cresplanex.api.state.webgateway.proxy.command.OrganizationCommandServiceProxy;
@@ -25,6 +28,10 @@ import java.util.List;
 public class OrganizationController {
 
     private final OrganizationCommandServiceProxy organizationCommandServiceProxy;
+    private final OrganizationCompositionService organizationCompositionService;
+    public static final int withUsersFlag = 1;
+
+    public static final int withUsers = 1;
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> createOrganization(
@@ -46,7 +53,7 @@ public class OrganizationController {
         CommandResponseDto response = new CommandResponseDto();
 
         response.setSuccess(true);
-        response.setData(new CommandResponseDto.Data(jobId));
+        response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("Organization create pending.");
 
@@ -70,9 +77,88 @@ public class OrganizationController {
         CommandResponseDto response = new CommandResponseDto();
 
         response.setSuccess(true);
-        response.setData(new CommandResponseDto.Data(jobId));
+        response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("Organization user add pending.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @RequestMapping(value = "", method = RequestMethod.GET)
+    public ResponseEntity<ListResponseDto<OrganizationDto>> getOrganizations(
+            @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
+            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
+            @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
+            @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
+            @RequestParam(name = "sort_field", required = false) String sortField,
+            @RequestParam(name = "sort_order", required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(name = "with_count", required = false, defaultValue = "false") boolean withCount,
+            @RequestParam(name = "has_owner_filter", required = false, defaultValue = "false") boolean hasOwnerFilter,
+            @RequestParam(name = "filter_owner_ids", required = false) List<String> filterOwnerIds,
+            @RequestParam(name = "has_plan_filter", required = false, defaultValue = "false") boolean hasPlanFilter,
+            @RequestParam(name = "filter_plans", required = false) List<String> filterPlans,
+            @RequestParam(name = "has_user_filter", required = false, defaultValue = "false") boolean hasUserFilter,
+            @RequestParam(name = "filter_user_ids", required = false) List<String> filterUserIds,
+            @RequestParam(name = "user_filter_type", required = false, defaultValue = "any") String userFilterType,
+            @RequestParam(name = "with", required = false) List<String> with
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        int flag = 0;
+
+        for (String w : with) {
+            if (w.equals("users")) {
+                flag |= withUsersFlag;
+            }
+        }
+
+        ListResponseDto response = new ListResponseDto();
+
+        switch (flag) {
+            case withUsers:
+                ListResponseDto.InternalData<OrganizationDto> organizationsWithUsers = organizationCompositionService.getOrganizationsWithUsers(
+                        jwt.getSubject(),
+                        limit,
+                        offset,
+                        cursor,
+                        pagination,
+                        sortField,
+                        sortOrder,
+                        withCount,
+                        hasOwnerFilter,
+                        filterOwnerIds,
+                        hasPlanFilter,
+                        filterPlans,
+                        hasUserFilter,
+                        filterUserIds,
+                        userFilterType
+                );
+                response.setData(organizationsWithUsers);
+                break;
+            default:
+                ListResponseDto.InternalData<OrganizationDto> organizations = organizationCompositionService.getOrganizations(
+                        jwt.getSubject(),
+                        limit,
+                        offset,
+                        cursor,
+                        pagination,
+                        sortField,
+                        sortOrder,
+                        withCount,
+                        hasOwnerFilter,
+                        filterOwnerIds,
+                        hasPlanFilter,
+                        filterPlans,
+                        hasUserFilter,
+                        filterUserIds,
+                        userFilterType
+                );
+                response.setData(organizations);
+        }
+
+        response.setSuccess(true);
+        response.setCode(WebGatewayApplicationCode.SUCCESS);
+        response.setCaption("Get Organizations list.");
 
         return ResponseEntity.ok(response);
     }

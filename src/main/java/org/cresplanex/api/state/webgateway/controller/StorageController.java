@@ -39,7 +39,7 @@ public class StorageController {
         CommandResponseDto response = new CommandResponseDto();
 
         response.setSuccess(true);
-        response.setData(new CommandResponseDto.Data(jobId));
+        response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("File object create pending.");
 

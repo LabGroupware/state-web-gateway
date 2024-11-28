@@ -33,7 +33,7 @@ public class UserPreferenceController {
         CommandResponseDto response = new CommandResponseDto();
 
         response.setSuccess(true);
-        response.setData(new CommandResponseDto.Data(jobId));
+        response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("User preference update pending.");
 

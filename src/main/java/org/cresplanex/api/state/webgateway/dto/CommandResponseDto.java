@@ -4,8 +4,9 @@ import lombok.*;
 
 import java.io.Serial;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class CommandResponseDto extends ResponseDto<CommandResponseDto.Data> {
+public class CommandResponseDto extends ResponseDto<CommandResponseDto.InternalData> {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -13,7 +14,7 @@ public class CommandResponseDto extends ResponseDto<CommandResponseDto.Data> {
     @Getter @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Data {
+    public static class InternalData {
         private String jobId;
     }
 }

@@ -51,7 +51,7 @@ public class PlanController {
         CommandResponseDto response = new CommandResponseDto();
 
         response.setSuccess(true);
-        response.setData(new CommandResponseDto.Data(jobId));
+        response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("Plan create pending.");
 
@@ -69,7 +69,7 @@ public class PlanController {
         CommandResponseDto response = new CommandResponseDto();
 
         response.setSuccess(true);
-        response.setData(new CommandResponseDto.Data(jobId));
+        response.setData(new CommandResponseDto.InternalData(jobId));
         response.setCode(WebGatewayApplicationCode.SUCCESS);
         response.setCaption("Plan status update pending.");
 
