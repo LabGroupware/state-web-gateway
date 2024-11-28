@@ -1,4 +1,4 @@
-package org.cresplanex.api.state.webgateway.composition;
+package org.cresplanex.api.state.webgateway.composition.helper;
 
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
@@ -98,11 +98,11 @@ public class TaskCompositionHelper {
         return taskDtoMap;
     }
 
-    public static void preAttachToFileObject(
+    public static  <T extends FileObjectDto> void preAttachToFileObject(
             TaskQueryProxy taskQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<FileObjectDto> fileObjectDtos
+            List<T> fileObjectDtos
     ) {
         List<TaskDto> relationTasks = taskQueryProxy.getTasksWithAttachments(
                 operatorId,
@@ -157,11 +157,11 @@ public class TaskCompositionHelper {
         }
     }
 
-    public static void preAttachToChargeUser(
+    public static <T extends UserProfileDto> void preAttachToChargeUser(
             TaskQueryProxy taskQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<UserProfileDto> userProfileDtos
+            List<T> userProfileDtos
     ) {
         List<TaskDto> relationTasks = taskQueryProxy.getTasks(
                 operatorId,
@@ -212,11 +212,11 @@ public class TaskCompositionHelper {
         }
     }
 
-    public static void preAttachToTeam(
+    public static  <T extends TeamDto> void preAttachToTeam(
             TaskQueryProxy taskQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<TeamDto> teamDtos
+            List<T> teamDtos
     ) {
         List<TaskDto> relationTasks = taskQueryProxy.getTasks(
                 operatorId,

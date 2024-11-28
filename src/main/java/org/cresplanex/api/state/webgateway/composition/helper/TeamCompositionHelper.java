@@ -1,4 +1,4 @@
-package org.cresplanex.api.state.webgateway.composition;
+package org.cresplanex.api.state.webgateway.composition.helper;
 
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
@@ -97,11 +97,11 @@ public class TeamCompositionHelper {
         return teamDtoMap;
     }
 
-    public static void preAttachToUserProfile(
+    public static <T extends UserProfileDto> void preAttachToUserProfile(
             TeamQueryProxy teamQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<UserProfileDto> userProfileDtos
+            List<T> userProfileDtos
     ) {
         List<TeamDto> relationTeams = teamQueryProxy.getTeamsWithUsers(
                 operatorId,
@@ -150,11 +150,11 @@ public class TeamCompositionHelper {
         }
     }
 
-    public static void preAttachToOrganization(
+    public static <T extends OrganizationDto> void preAttachToOrganization(
             TeamQueryProxy teamQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<OrganizationDto> organizationDtos
+            List<T> organizationDtos
     ) {
         List<TeamDto> relationTeams = teamQueryProxy.getTeams(
                 operatorId,

@@ -1,4 +1,4 @@
-package org.cresplanex.api.state.webgateway.composition;
+package org.cresplanex.api.state.webgateway.composition.helper;
 
 import org.cresplanex.api.state.webgateway.dto.domain.userpreference.UserPreferenceDto;
 import org.cresplanex.api.state.webgateway.hasher.UserPreferenceHasher;

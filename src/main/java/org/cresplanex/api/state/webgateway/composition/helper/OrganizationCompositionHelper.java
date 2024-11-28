@@ -1,4 +1,4 @@
-package org.cresplanex.api.state.webgateway.composition;
+package org.cresplanex.api.state.webgateway.composition.helper;
 
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
@@ -96,11 +96,11 @@ public class OrganizationCompositionHelper {
         return organizationDtoMap;
     }
 
-    public static void preAttachToUserProfile(
+    public static <T extends UserProfileDto> void preAttachToUserProfile(
             OrganizationQueryProxy organizationQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<UserProfileDto> userProfileDtos
+            List<T> userProfileDtos
     ) {
         List<OrganizationDto> relationOrganizations = organizationQueryProxy.getOrganizationsWithUsers(
                 operatorId,
@@ -149,11 +149,11 @@ public class OrganizationCompositionHelper {
         }
     }
 
-    public static void preAttachToOwner(
+    public static <T extends UserProfileDto> void preAttachToOwner(
             OrganizationQueryProxy organizationQueryProxy,
             RetrievedCacheContainer cache,
             String operatorId,
-            List<UserProfileDto> userProfileDtos
+            List<T> userProfileDtos
     ) {
         List<OrganizationDto> relationOrganizations = organizationQueryProxy.getOrganizations(
                 operatorId,

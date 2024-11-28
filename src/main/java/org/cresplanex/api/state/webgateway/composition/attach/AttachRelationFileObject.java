@@ -1,11 +1,12 @@
-package org.cresplanex.api.state.webgateway.composition;
+package org.cresplanex.api.state.webgateway.composition.attach;
 
 import lombok.RequiredArgsConstructor;
+import org.cresplanex.api.state.webgateway.composition.helper.TaskCompositionHelper;
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskOnFileObjectDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectDto;
-import org.cresplanex.api.state.webgateway.proxy.query.TaskQueryProxy;
+import org.cresplanex.api.state.webgateway.proxy.query.*;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.FileObjectRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
@@ -16,9 +17,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AttachRelationFileObject {
 
+    private final UserProfileQueryProxy userProfileQueryProxy;
+    private final TeamQueryProxy teamQueryProxy;
+    private final UserPreferenceQueryProxy userPreferenceQueryProxy;
+    private final OrganizationQueryProxy organizationQueryProxy;
     private final TaskQueryProxy taskQueryProxy;
+    private final FileObjectQueryProxy fileObjectQueryProxy;
 
-    public void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, FileObjectDto fileObjectDto) {
+    public <T extends FileObjectDto> void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, T fileObjectDto) {
 
         // attachedTasks
         if (retriever.getAttachedTasksRelationRetriever() != null) {
@@ -46,7 +52,7 @@ public class AttachRelationFileObject {
         }
     }
 
-    public void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<FileObjectDto> fileObjectDto) {
+    public <T extends FileObjectDto> void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<T> fileObjectDto) {
         // AttachedTasks
         if (retriever.getAttachedTasksRelationRetriever() != null) {
             TaskCompositionHelper.preAttachToFileObject(
@@ -67,56 +73,21 @@ public class AttachRelationFileObject {
                     retriever.getAttachedTasksRelationRetriever().getChain()
             );
 
-            for (FileObjectDto dto : fileObjectDto) {
-                this.attachRelationToTasks(
-                        operatorId,
-                        cache,
-                        dto,
-                        taskDtoMap,
-                        retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(dto),
-                        retriever.getAttachedTasksRelationRetriever().getChain()
-                );
-            }
+            this.attachRelationToTasks(
+                    operatorId,
+                    cache,
+                    fileObjectDto,
+                    taskDtoMap,
+                    fileObjectDto.stream()
+                            .map(retriever.getAttachedTasksRelationRetriever().getRelationRetriever())
+                            .toList(),
+                    retriever.getAttachedTasksRelationRetriever().getChain()
+            );
         }
     }
 
-//    public void attachList(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<List<FileObjectDto>> fileObjectDto) {
-//        // AttachedTasks
-//        if (retriever.getAttachedTasksRelationRetriever() != null) {
-//            TaskCompositionHelper.preAttachToFileObject(
-//                    taskQueryProxy,
-//                    cache,
-//                    operatorId,
-//                    fileObjectDto.stream().flatMap(List::stream).toList()
-//            );
-//
-//            Map<String, TaskDto> taskDtoMap = TaskCompositionHelper.createTaskDtoMap(
-//                    taskQueryProxy,
-//                    cache,
-//                    operatorId,
-//                    fileObjectDto.stream()
-//                            .flatMap(List::stream)
-//                            .map(retriever.getAttachedTasksRelationRetriever().getIdRetriever())
-//                            .flatMap(List::stream)
-//                            .toList(),
-//                    retriever.getAttachedTasksRelationRetriever().getChain()
-//            );
-//
-//            for (FileObjectDto dto : fileObjectDto.stream().flatMap(List::stream).toList()) {
-//                this.attachRelationToTasks(
-//                        operatorId,
-//                        cache,
-//                        dto,
-//                        taskDtoMap,
-//                        retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(dto),
-//                        retriever.getAttachedTasksRelationRetriever().getChain()
-//                );
-//            }
-//        }
-//    }
-
-    private void internalAttachRelationToTasks(
-            FileObjectDto fileObjectDto,
+    private <T extends FileObjectDto> void internalAttachRelationToTasks(
+            T fileObjectDto,
             Map<String, TaskDto> taskDtoMap
     ) {
         if(fileObjectDto.getAttachedTasks().isHasValue()) {
@@ -142,10 +113,10 @@ public class AttachRelationFileObject {
         }
     }
 
-    protected void attachRelationToTasks(
+    protected <T extends FileObjectDto> void attachRelationToTasks(
             String operatorId,
             RetrievedCacheContainer cache,
-            FileObjectDto fileObjectDto,
+            T fileObjectDto,
             Map<String, TaskDto> taskDtoMap,
             ListRelation<TaskOnFileObjectDto> tasksRelation,
             List<TaskRetriever> retrievers
@@ -154,18 +125,24 @@ public class AttachRelationFileObject {
         if(fileObjectDto.getAttachedTasks().isHasValue()) {
             retrievers.forEach(retriever -> {
                 if (retriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-                    // TODO: Implement this
-//                    var a = new AttachRelationFileObject(taskQueryProxy);
-//                    a.attach(operatorId, cache, retriever, tasksRelation.getValue());
+                    AttachRelationTask attachRelationTask = new AttachRelationTask(
+                            userProfileQueryProxy,
+                            teamQueryProxy,
+                            userPreferenceQueryProxy,
+                            organizationQueryProxy,
+                            taskQueryProxy,
+                            fileObjectQueryProxy
+                    );
+                    attachRelationTask.attach(operatorId, cache, retriever, tasksRelation.getValue());
                 }
             });
         }
     }
 
-    protected void attachRelationToTasks(
+    protected <T extends FileObjectDto> void attachRelationToTasks(
             String operatorId,
             RetrievedCacheContainer cache,
-            List<FileObjectDto> fileObjectDto,
+            List<T> fileObjectDto,
             Map<String, TaskDto> taskDtoMap,
             List<ListRelation<TaskOnFileObjectDto>> tasksRelation,
             List<TaskRetriever> retrievers
@@ -178,11 +155,17 @@ public class AttachRelationFileObject {
                     .filter(ListRelation::isHasValue)
                     .map(ListRelation::getValue)
                     .toList();
-//            var a = new AttachRelationFileObject(taskQueryProxy);
-//            a.attach(operatorId, cache, retriever, tasksRelationList.stream().flatMap(List::stream).toList());
-//            if (retriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
-//                // TODO: Implement this
-//            }
+            if (retriever != null && !tasksRelationList.isEmpty()) {
+                AttachRelationTask attachRelationTask = new AttachRelationTask(
+                        userProfileQueryProxy,
+                        teamQueryProxy,
+                        userPreferenceQueryProxy,
+                        organizationQueryProxy,
+                        taskQueryProxy,
+                        fileObjectQueryProxy
+                );
+                attachRelationTask.attach(operatorId, cache, retriever, tasksRelationList.stream().flatMap(List::stream).toList());
+            }
         });
     }
 }
