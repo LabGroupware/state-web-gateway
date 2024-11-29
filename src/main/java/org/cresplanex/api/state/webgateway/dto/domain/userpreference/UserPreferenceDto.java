@@ -1,12 +1,10 @@
 package org.cresplanex.api.state.webgateway.dto.domain.userpreference;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.cresplanex.api.state.webgateway.dto.domain.DeepCloneable;
 import org.cresplanex.api.state.webgateway.dto.domain.DomainDto;
 
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

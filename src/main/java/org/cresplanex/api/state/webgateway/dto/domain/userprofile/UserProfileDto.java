@@ -1,9 +1,6 @@
 package org.cresplanex.api.state.webgateway.dto.domain.userprofile;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.cresplanex.api.state.webgateway.dto.domain.DeepCloneable;
 import org.cresplanex.api.state.webgateway.dto.domain.DomainDto;
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
@@ -16,6 +13,7 @@ import org.cresplanex.api.state.webgateway.dto.domain.userpreference.UserPrefere
 
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

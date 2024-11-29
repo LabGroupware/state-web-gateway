@@ -1,9 +1,6 @@
 package org.cresplanex.api.state.webgateway.dto.domain.plan;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.cresplanex.api.state.webgateway.dto.domain.DeepCloneable;
 import org.cresplanex.api.state.webgateway.dto.domain.OverMerge;
 import org.cresplanex.api.state.webgateway.dto.domain.Relation;
@@ -13,10 +10,9 @@ import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto
 
 import java.util.List;
 
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
-@Builder
 public class TaskOnFileObjectDto extends TaskDto implements OverMerge<TaskDto, TaskOnFileObjectDto>, DeepCloneable {
 
     public TaskOnFileObjectDto(TaskDto taskDto) {

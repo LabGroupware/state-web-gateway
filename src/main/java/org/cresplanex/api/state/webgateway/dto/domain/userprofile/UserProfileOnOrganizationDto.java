@@ -1,16 +1,12 @@
 package org.cresplanex.api.state.webgateway.dto.domain.userprofile;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.cresplanex.api.state.webgateway.dto.domain.DeepCloneable;
 import org.cresplanex.api.state.webgateway.dto.domain.OverMerge;
 
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
-@Builder
 public class UserProfileOnOrganizationDto extends UserProfileDto implements OverMerge<UserProfileDto, UserProfileOnOrganizationDto>, DeepCloneable {
 
     public UserProfileOnOrganizationDto(UserProfileDto userProfileDto) {

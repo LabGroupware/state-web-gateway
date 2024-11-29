@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter @Setter
 @JsonSerialize(using = RelationSerializer.class)
-public class ListRelation<T extends DeepCloneable> implements Cloneable, DeepCloneable {
+public class ListRelation<T extends DeepCloneable> implements Cloneable {
     private boolean hasValue;
     private List<T> value;
 

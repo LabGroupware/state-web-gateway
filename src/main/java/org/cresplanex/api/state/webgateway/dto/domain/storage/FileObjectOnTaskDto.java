@@ -1,16 +1,12 @@
 package org.cresplanex.api.state.webgateway.dto.domain.storage;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.cresplanex.api.state.webgateway.dto.domain.DeepCloneable;
 import org.cresplanex.api.state.webgateway.dto.domain.OverMerge;
 
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
-@Builder
 public class FileObjectOnTaskDto extends FileObjectDto implements OverMerge<FileObjectDto, FileObjectOnTaskDto>, DeepCloneable {
 
     public FileObjectOnTaskDto(FileObjectDto fileObjectDto) {
