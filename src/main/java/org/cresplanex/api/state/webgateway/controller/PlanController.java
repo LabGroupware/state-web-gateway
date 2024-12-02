@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/plans")
+@RequestMapping("/teams/{teamId}/tasks")
 @AllArgsConstructor
 public class PlanController {
 
@@ -35,12 +35,13 @@ public class PlanController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> createTask(
+            @PathVariable String teamId,
             @Valid @RequestBody CreateTaskRequestDto requestDTO,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         TaskWithAttachments task = TaskWithAttachments.newBuilder()
                 .setTask(Task.newBuilder()
-                        .setTeamId(requestDTO.getTeamId())
+                        .setTeamId(teamId)
                         .setChargeUserId(requestDTO.getChargeUserId())
                         .setTitle(requestDTO.getTitle())
                         .setDescription(requestDTO.getDescription())
@@ -71,10 +72,12 @@ public class PlanController {
 
     @RequestMapping(value = "/{taskId}/status", method = RequestMethod.PUT)
     public ResponseEntity<CommandResponseDto> updateStatusTask(
+            @PathVariable String teamId,
             @PathVariable String taskId,
             @Valid @RequestBody UpdateStatusTaskRequestDto requestDTO,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
+        // TODO: TaskのTeam所属チェック
         String jobId = planCommandServiceProxy.updateStatusTask(userDetails.getUsername(), taskId, requestDTO.getStatus());
 
         CommandResponseDto response = new CommandResponseDto();
@@ -89,12 +92,14 @@ public class PlanController {
 
     @RequestMapping(value = "/{taskId}", method = RequestMethod.GET)
     public ResponseEntity<ResponseDto<TaskDto>> findTask(
+            @PathVariable String teamId,
             @PathVariable String taskId,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
 
+        // TODO: TaskのTeam所属チェック
         TaskDto task = taskCompositionService.findTask(
                 jwt.getSubject(),
                 taskId,
@@ -112,31 +117,31 @@ public class PlanController {
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<ListResponseDto<TaskDto>> getTasks(
-            @RequestParam(name = "teamId", required = false) String teamId,
-            @RequestParam(name = "limit", required = false) int limit,
-            @RequestParam(name = "offset", required = false) int offset,
-            @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "pagination", required = false) String pagination,
-            @RequestParam(name = "sortField", required = false) String sortField,
-            @RequestParam(name = "sortOrder", required = false) String sortOrder,
-            @RequestParam(name = "withCount", required = false) boolean withCount,
-            @RequestParam(name = "hasStatusFilter", required = false) boolean hasStatusFilter,
-            @RequestParam(name = "filterStatuses", required = false) List<String> filterStatuses,
-            @RequestParam(name = "hasChargeUserFilter", required = false) boolean hasChargeUserFilter,
-            @RequestParam(name = "filterChargeUserIds", required = false) List<String> filterChargeUserIds,
-            @RequestParam(name = "filterStartDatetimeEarlierThan", required = false) String filterStartDatetimeEarlierThan,
-            @RequestParam(name = "filterStartDatetimeLaterThan", required = false) String filterStartDatetimeLaterThan,
-            @RequestParam(name = "filterDueDatetimeEarlierThan", required = false) String filterDueDatetimeEarlierThan,
-            @RequestParam(name = "filterDueDatetimeLaterThan", required = false) String filterDueDatetimeLaterThan,
-            @RequestParam(name = "hasFileObjectFilter", required = false) boolean hasFileObjectFilter,
-            @RequestParam(name = "filterFileObjectIds", required = false) List<String> filterFileObjectIds,
-            @RequestParam(name = "fileObjectFilterType", required = false) String fileObjectFilterType,
+            @PathVariable String teamId,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
+            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
+            @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
+            @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
+            @RequestParam(name = "sortField", required = false, defaultValue = "none") String sortField,
+            @RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(name = "withCount", required = false, defaultValue = "false") boolean withCount,
+            @RequestParam(name = "hasStatusFilter", required = false, defaultValue = "false") boolean hasStatusFilter,
+            @RequestParam(name = "filterStatuses", required = false, defaultValue = "") List<String> filterStatuses,
+            @RequestParam(name = "hasChargeUserFilter", required = false, defaultValue = "false") boolean hasChargeUserFilter,
+            @RequestParam(name = "filterChargeUserIds", required = false, defaultValue = "") List<String> filterChargeUserIds,
+            @RequestParam(name = "filterStartDatetimeEarlierThan", required = false, defaultValue = "") String filterStartDatetimeEarlierThan,
+            @RequestParam(name = "filterStartDatetimeLaterThan", required = false, defaultValue = "") String filterStartDatetimeLaterThan,
+            @RequestParam(name = "filterDueDatetimeEarlierThan", required = false, defaultValue = "") String filterDueDatetimeEarlierThan,
+            @RequestParam(name = "filterDueDatetimeLaterThan", required = false, defaultValue = "") String filterDueDatetimeLaterThan,
+            @RequestParam(name = "hasFileObjectFilter", required = false, defaultValue = "false") boolean hasFileObjectFilter,
+            @RequestParam(name = "filterFileObjectIds", required = false, defaultValue = "") List<String> filterFileObjectIds,
+            @RequestParam(name = "fileObjectFilterType", required = false, defaultValue = "none") String fileObjectFilterType,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
 
-        ListResponseDto.InternalData<TaskDto> tasks = taskCompositionService.getTasks(
+        ListResponseDto.InternalData<TaskDto> tasks = taskCompositionService.getTasksOnTeam(
                 jwt.getSubject(),
                 teamId,
                 limit,

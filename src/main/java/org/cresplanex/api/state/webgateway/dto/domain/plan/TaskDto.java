@@ -42,20 +42,16 @@ public class TaskDto extends DomainDto implements DeepCloneable {
 
     @Override
     public TaskDto deepClone() {
-        try {
-            TaskDto cloned = (TaskDto) super.clone();
-            if (attachments != null){
-                cloned.setAttachments(attachments.clone());
-            }
-            if (team != null){
-                cloned.setTeam(team.clone());
-            }
-            if (chargeUser != null){
-                cloned.setChargeUser(chargeUser.clone());
-            }
-            return cloned;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
+        TaskDto cloned = (TaskDto) super.clone();
+        if (attachments != null){
+            cloned.setAttachments(attachments.clone());
         }
+        if (team != null){
+            cloned.setTeam(team.clone());
+        }
+        if (chargeUser != null){
+            cloned.setChargeUser(chargeUser.clone());
+        }
+        return cloned;
     }
 }

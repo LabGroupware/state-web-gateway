@@ -47,8 +47,8 @@ public class UserProfileCompositionHelper {
                     userProfile = userProfileQueryProxy.getPluralUserProfilesByUserIds(
                             operatorId,
                             needRetrieveAttachedUserIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
                     for (UserProfileDto dto : userProfile) {
                         userProfileDtoMap.put(dto.getUserId(), dto);

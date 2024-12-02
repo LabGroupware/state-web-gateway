@@ -25,10 +25,6 @@ public class UserPreferenceDto extends DomainDto implements DeepCloneable {
 
     @Override
     public UserPreferenceDto deepClone() {
-        try {
-            return (UserPreferenceDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+        return (UserPreferenceDto) super.clone();
     }
 }

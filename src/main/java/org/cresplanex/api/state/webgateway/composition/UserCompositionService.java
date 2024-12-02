@@ -1,6 +1,7 @@
 package org.cresplanex.api.state.webgateway.composition;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationUserPreference;
 import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationUserProfile;
 import org.cresplanex.api.state.webgateway.composition.helper.UserPreferenceCompositionHelper;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UserCompositionService {
@@ -31,7 +33,7 @@ public class UserCompositionService {
     public UserProfileDto findUserProfile(String operatorId, String userId, List<String> with) {
         UserProfileDto userProfile;
         UserProfileRetriever userProfileRetriever = UserProfileRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = UserProfileCompositionHelper.calculateNeedQuery(List.of(userProfileRetriever));
         switch (need) {
@@ -56,7 +58,7 @@ public class UserCompositionService {
     public UserPreferenceDto findUserPreference(String operatorId, String userId, List<String> with) {
         UserPreferenceDto userPreference;
         UserPreferenceRetriever userPreferenceRetriever = UserPreferenceRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = UserPreferenceCompositionHelper.calculateNeedQuery(List.of(userPreferenceRetriever));
         switch (need) {
@@ -91,7 +93,7 @@ public class UserCompositionService {
     ) {
         ListResponseDto.InternalData<UserProfileDto> userProfiles;
         UserProfileRetriever userProfileRetriever = UserProfileRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = UserProfileCompositionHelper.calculateNeedQuery(List.of(userProfileRetriever));
         switch (need) {

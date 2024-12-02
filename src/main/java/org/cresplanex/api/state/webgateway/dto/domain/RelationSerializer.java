@@ -11,7 +11,9 @@ public class RelationSerializer<T extends DeepCloneable> extends JsonSerializer<
     @Override
     public void serialize(Relation<T> relation, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         if (relation.isHasValue()) {
-            gen.writeObject(relation.getValue());
+            gen.writeObject(relation.getValue().deepClone());
+        } else {
+            gen.writeNull();
         }
     }
 }

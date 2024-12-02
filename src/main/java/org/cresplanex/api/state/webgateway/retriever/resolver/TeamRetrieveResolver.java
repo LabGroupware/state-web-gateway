@@ -68,21 +68,21 @@ public class TeamRetrieveResolver {
                 continue;
             }
             if (p.startsWith(String.format("%s", TeamRetriever.USERS_RELATION))) {
-                String subPath = p.substring(TeamRetriever.USERS_RELATION.length() + 1);
+                String subPath = p.substring(TeamRetriever.USERS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     usersRelationPath.add(subPath.substring(1));
                 }else {
                     usersRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", TeamRetriever.ORGANIZATION_RELATION))) {
-                String subPath = p.substring(TeamRetriever.ORGANIZATION_RELATION.length() + 1);
+                String subPath = p.substring(TeamRetriever.ORGANIZATION_RELATION.length());
                 if (subPath.startsWith(".")) {
                     organizationRelationPath.add(subPath.substring(1));
                 }else {
                     organizationRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", TeamRetriever.TASKS_RELATION))) {
-                String subPath = p.substring(TeamRetriever.TASKS_RELATION.length() + 1);
+                String subPath = p.substring(TeamRetriever.TASKS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     tasksRelationPath.add(subPath.substring(1));
                 }else {

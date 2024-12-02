@@ -2,6 +2,7 @@ package org.cresplanex.api.state.webgateway.controller;
 
 import build.buf.gen.userprofile.v1.UserProfile;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.UserCompositionService;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/user-profiles")
 @AllArgsConstructor
@@ -51,7 +53,7 @@ public class UserProfileController {
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
             @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
             @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
-            @RequestParam(name = "sort_field", required = false) String sortField,
+            @RequestParam(name = "sort_field", required = false, defaultValue = "none") String sortField,
             @RequestParam(name = "sort_order", required = false, defaultValue = "asc") String sortOrder,
             @RequestParam(name = "with_count", required = false, defaultValue = "false") boolean withCount,
             @RequestParam(name = "with", required = false) List<String> with

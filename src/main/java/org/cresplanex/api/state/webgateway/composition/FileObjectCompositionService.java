@@ -23,7 +23,7 @@ public class FileObjectCompositionService {
     public FileObjectDto findFileObject(String operatorId, String fileObjectId, List<String> with) {
         FileObjectDto fileObject;
         FileObjectRetriever fileObjectRetriever = FIleObjectRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = FileObjectCompositionHelper.calculateNeedQuery(List.of(fileObjectRetriever));
         switch (need) {
@@ -60,7 +60,7 @@ public class FileObjectCompositionService {
     ) {
         ListResponseDto.InternalData<FileObjectDto> fileObjects;
         FileObjectRetriever fileObjectRetriever = FIleObjectRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = FileObjectCompositionHelper.calculateNeedQuery(List.of(fileObjectRetriever));
         switch (need) {

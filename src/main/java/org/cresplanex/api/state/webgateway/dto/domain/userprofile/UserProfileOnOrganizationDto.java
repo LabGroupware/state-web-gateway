@@ -72,10 +72,6 @@ public class UserProfileOnOrganizationDto extends UserProfileDto implements Over
 
     @Override
     public UserProfileOnOrganizationDto deepClone() {
-        try {
-            return (UserProfileOnOrganizationDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+        return (UserProfileOnOrganizationDto) super.clone();
     }
 }

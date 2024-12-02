@@ -4,12 +4,16 @@ import build.buf.gen.cresplanex.nova.v1.SortOrder;
 import build.buf.gen.plan.v1.*;
 import build.buf.gen.plan.v1.GetTasksOnFileObjectRequest;
 import build.buf.gen.plan.v1.GetTasksOnFileObjectResponse;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.cresplanex.api.state.common.constants.PlanServiceApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.CompositionUtils;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskOnFileObjectDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectOnTaskDto;
+import org.cresplanex.api.state.webgateway.exception.TaskNotFoundException;
 import org.cresplanex.api.state.webgateway.mapper.*;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +29,24 @@ public class TaskQueryProxy {
             String operatorId,
             String taskId
     ) {
-        FindTaskResponse response = planServiceBlockingStub.findTask(
-                FindTaskRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setTaskId(taskId)
-                        .build()
-        );
+        FindTaskResponse response;
+        try {
+            response = planServiceBlockingStub.findTask(
+                    FindTaskRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setTaskId(taskId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new TaskNotFoundException(
+                        TaskNotFoundException.FindType.TASK_ID,
+                        taskId,
+                        PlanServiceApplicationCode.TASK_NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return TaskMapper.convert(response.getTask());
     }
 
@@ -38,12 +54,24 @@ public class TaskQueryProxy {
             String operatorId,
             String taskId
     ) {
-        FindTaskWithAttachmentsResponse response = planServiceBlockingStub.findTaskWithAttachments(
-                FindTaskWithAttachmentsRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setTaskId(taskId)
-                        .build()
-        );
+        FindTaskWithAttachmentsResponse response;
+        try {
+            response = planServiceBlockingStub.findTaskWithAttachments(
+                    FindTaskWithAttachmentsRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setTaskId(taskId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new TaskNotFoundException(
+                        TaskNotFoundException.FindType.TASK_ID,
+                        taskId,
+                        PlanServiceApplicationCode.TASK_NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return TaskMapper.convert(response.getTask());
     }
 

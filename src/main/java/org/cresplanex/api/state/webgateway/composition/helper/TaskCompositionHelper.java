@@ -60,8 +60,8 @@ public class TaskCompositionHelper {
                     task = taskQueryProxy.getPluralTasksWithAttachments(
                             operatorId,
                             needRetrieveAttachedTaskIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
 
                     for (TaskDto dto : task) {
@@ -84,8 +84,8 @@ public class TaskCompositionHelper {
                     task = taskQueryProxy.getPluralTasks(
                             operatorId,
                             needRetrieveAttachedTaskIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
                     for (TaskDto dto : task) {
                         taskDtoMap.put(dto.getTaskId(), dto);
@@ -108,21 +108,21 @@ public class TaskCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 false,
-                null,
+                List.of(),
                 false,
-                null,
+                List.of(),
                 false,
-                null,
-                null,
-                null,
-                null,
-                null,
+                List.of(),
+                "",
+                "",
+                "",
+                "",
                 true,
                 fileObjectDtos.stream().map(FileObjectDto::getFileObjectId).toList(),
                 "any"
@@ -167,24 +167,24 @@ public class TaskCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 false,
-                null,
+                List.of(),
                 true,
-                null,
+                List.of(),
                 true,
                 userProfileDtos.stream().map(UserProfileDto::getUserId).toList(),
-                null,
-                null,
-                null,
-                null,
+                "",
+                "",
+                "",
+                "",
                 false,
-                null,
-                null
+                List.of(),
+                "none"
         ).getListData();
 
         Map<String, UserProfileDto> userProfileDtoMap = userProfileDtos.stream()
@@ -222,24 +222,24 @@ public class TaskCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 true,
                 teamDtos.stream().map(TeamDto::getTeamId).toList(),
                 true,
-                null,
+                List.of(),
                 false,
-                null,
-                null,
-                null,
-                null,
-                null,
+                List.of(),
+                "",
+                "",
+                "",
+                "",
                 false,
-                null,
-                null
+                List.of(),
+                "none"
         ).getListData();
 
         Map<String, TeamDto> teamDtoMap = teamDtos.stream()

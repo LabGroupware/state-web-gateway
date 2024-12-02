@@ -66,21 +66,21 @@ public class OrganizationRetrieveResolver {
                 continue;
             }
             if (p.startsWith(String.format("%s", OrganizationRetriever.USERS_RELATION))) {
-                String subPath = p.substring(OrganizationRetriever.USERS_RELATION.length() + 1);
+                String subPath = p.substring(OrganizationRetriever.USERS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     usersRelationPath.add(subPath.substring(1));
                 }else {
                     usersRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", OrganizationRetriever.OWNER_RELATION))) {
-                String subPath = p.substring(OrganizationRetriever.OWNER_RELATION.length() + 1);
+                String subPath = p.substring(OrganizationRetriever.OWNER_RELATION.length());
                 if (subPath.startsWith(".")) {
                     ownerRelationPath.add(subPath.substring(1));
                 }else {
                     ownerRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", OrganizationRetriever.TEAMS_RELATION))) {
-                String subPath = p.substring(OrganizationRetriever.TEAMS_RELATION.length() + 1);
+                String subPath = p.substring(OrganizationRetriever.TEAMS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     teamsRelationPath.add(subPath.substring(1));
                 }else {

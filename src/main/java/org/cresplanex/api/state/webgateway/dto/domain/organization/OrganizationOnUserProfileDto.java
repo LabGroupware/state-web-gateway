@@ -51,10 +51,6 @@ public class OrganizationOnUserProfileDto extends OrganizationDto implements Ove
 
     @Override
     public OrganizationOnUserProfileDto deepClone() {
-        try {
-            return (OrganizationOnUserProfileDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+        return (OrganizationOnUserProfileDto) super.clone();
     }
 }

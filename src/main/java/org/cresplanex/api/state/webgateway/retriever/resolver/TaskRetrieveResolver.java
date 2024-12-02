@@ -65,21 +65,21 @@ public class TaskRetrieveResolver {
                 continue;
             }
             if (p.startsWith(String.format("%s", TaskRetriever.ATTACHMENTS_RELATION))) {
-                String subPath = p.substring(TaskRetriever.ATTACHMENTS_RELATION.length() + 1);
+                String subPath = p.substring(TaskRetriever.ATTACHMENTS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     attachmentsRelationPath.add(subPath.substring(1));
                 }else {
                     attachmentsRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", TaskRetriever.TEAM_RELATION))) {
-                String subPath = p.substring(TaskRetriever.TEAM_RELATION.length() + 1);
+                String subPath = p.substring(TaskRetriever.TEAM_RELATION.length());
                 if (subPath.startsWith(".")) {
                     teamRelationPath.add(subPath.substring(1));
                 }else {
                     teamRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", TaskRetriever.CHARGE_USER_RELATION))) {
-                String subPath = p.substring(TaskRetriever.CHARGE_USER_RELATION.length() + 1);
+                String subPath = p.substring(TaskRetriever.CHARGE_USER_RELATION.length());
                 if (subPath.startsWith(".")) {
                     chargeUserRelationPath.add(subPath.substring(1));
                 }else {

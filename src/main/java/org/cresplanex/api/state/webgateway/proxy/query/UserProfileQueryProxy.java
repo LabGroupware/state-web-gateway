@@ -2,16 +2,25 @@ package org.cresplanex.api.state.webgateway.proxy.query;
 
 import build.buf.gen.cresplanex.nova.v1.SortOrder;
 import build.buf.gen.userprofile.v1.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.cresplanex.api.state.common.constants.UserProfileServiceApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.CompositionUtils;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
+import org.cresplanex.api.state.webgateway.exception.UserNotFoundException;
 import org.cresplanex.api.state.webgateway.mapper.CommonMapper;
 import org.cresplanex.api.state.webgateway.mapper.UserProfileMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+@Slf4j
 @Service
 public class UserProfileQueryProxy {
 
@@ -22,12 +31,24 @@ public class UserProfileQueryProxy {
             String operatorId,
             String userProfileId
     ) {
-        FindUserProfileResponse response = userProfileServiceBlockingStub.findUserProfile(
-                FindUserProfileRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setUserProfileId(userProfileId)
-                        .build()
-        );
+        FindUserProfileResponse response;
+        try {
+            response = userProfileServiceBlockingStub.findUserProfile(
+                    FindUserProfileRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setUserProfileId(userProfileId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new UserNotFoundException(
+                        UserNotFoundException.FindType.USER_PROFILE_ID,
+                        userProfileId,
+                        UserProfileServiceApplicationCode.NOT_FOUND_USER_PROFILE
+                );
+            }
+            throw e;
+        }
         return UserProfileMapper.convert(response.getUserProfile());
     }
 
@@ -35,12 +56,25 @@ public class UserProfileQueryProxy {
             String operatorId,
             String userId
     ) {
-        FindUserProfileByUserIdResponse response = userProfileServiceBlockingStub.findUserProfileByUserId(
-                FindUserProfileByUserIdRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setUserId(userId)
-                        .build()
-        );
+        FindUserProfileByUserIdResponse response;
+        try {
+            response = userProfileServiceBlockingStub.findUserProfileByUserId(
+                    FindUserProfileByUserIdRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setUserId(userId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new UserNotFoundException(
+                        UserNotFoundException.FindType.USER_ID,
+                        userId,
+                        UserProfileServiceApplicationCode.NOT_FOUND_USER_PROFILE
+                );
+            }
+            throw e;
+        }
+
         return UserProfileMapper.convert(response.getUserProfile());
     }
 
@@ -48,12 +82,24 @@ public class UserProfileQueryProxy {
             String operatorId,
             String userEmail
     ) {
-        FindUserProfileByEmailResponse response = userProfileServiceBlockingStub.findUserProfileByEmail(
-                FindUserProfileByEmailRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setEmail(userEmail)
-                        .build()
-        );
+        FindUserProfileByEmailResponse response;
+        try {
+            response = userProfileServiceBlockingStub.findUserProfileByEmail(
+                    FindUserProfileByEmailRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setEmail(userEmail)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new UserNotFoundException(
+                        UserNotFoundException.FindType.EMAIL,
+                        userEmail,
+                        UserProfileServiceApplicationCode.NOT_FOUND_USER_PROFILE
+                );
+            }
+            throw e;
+        }
         return UserProfileMapper.convert(response.getUserProfile());
     }
 

@@ -63,4 +63,3 @@ grpc:
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: PLAINTEXT
-

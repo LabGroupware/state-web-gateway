@@ -40,7 +40,7 @@ public class FIleObjectRetrieveResolver {
                 continue;
             }
             if (p.startsWith(String.format("%s", FileObjectRetriever.ATTACHED_TASKS_RELATION))) {
-                String subPath = p.substring(FileObjectRetriever.ATTACHED_TASKS_RELATION.length() + 1);
+                String subPath = p.substring(FileObjectRetriever.ATTACHED_TASKS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     attachedTasksRelationPath.add(subPath.substring(1));
                 }else {

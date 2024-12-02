@@ -33,6 +33,31 @@ import java.util.Objects;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    // NotFoundException
+    @ExceptionHandler(ApplicationModelNotFoundException.class)
+    public ResponseEntity<Object> handleApplicationModelNotFoundException(
+            ApplicationModelNotFoundException ex,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        Map<String, String> errorAttributes = new HashMap<>();
+        errorAttributes.put("findType", ex.getFindType());
+        errorAttributes.put("findValue", ex.getFindValue());
+
+        ErrorAttributeDto errorAttributeDTO = new ErrorAttributeDto(
+                request.getRequestURI(),
+                errorAttributes
+        );
+
+        ErrorResponseDto errorResponseDTO = ErrorResponseDto.create(
+                ex.getErrorCode(),
+                ex.getErrorCaption(),
+                errorAttributeDTO
+        );
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
+    }
+
     // Validation Error
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleMethodArgumentNotValid(

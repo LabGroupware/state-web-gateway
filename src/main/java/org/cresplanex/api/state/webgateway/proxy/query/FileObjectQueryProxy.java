@@ -2,10 +2,14 @@ package org.cresplanex.api.state.webgateway.proxy.query;
 
 import build.buf.gen.cresplanex.nova.v1.SortOrder;
 import build.buf.gen.storage.v1.*;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.cresplanex.api.state.common.constants.StorageServiceApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.CompositionUtils;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectDto;
+import org.cresplanex.api.state.webgateway.exception.FileObjectNotFoundException;
 import org.cresplanex.api.state.webgateway.mapper.CommonMapper;
 import org.cresplanex.api.state.webgateway.mapper.FileObjectMapper;
 import org.springframework.stereotype.Service;
@@ -22,12 +26,24 @@ public class FileObjectQueryProxy {
             String operatorId,
             String fileObjectId
     ) {
-        FindFileObjectResponse response = storageServiceBlockingStub.findFileObject(
-                FindFileObjectRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setFileObjectId(fileObjectId)
-                        .build()
-        );
+        FindFileObjectResponse response;
+        try {
+            response = storageServiceBlockingStub.findFileObject(
+                    FindFileObjectRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setFileObjectId(fileObjectId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new FileObjectNotFoundException(
+                        FileObjectNotFoundException.FindType.FILE_OBJECT_ID,
+                        fileObjectId,
+                        StorageServiceApplicationCode.FILE_OBJECT_NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return FileObjectMapper.convert(response.getFileObject());
     }
 

@@ -58,10 +58,6 @@ public class TaskOnFileObjectDto extends TaskDto implements OverMerge<TaskDto, T
 
     @Override
     public TaskOnFileObjectDto deepClone() {
-        try {
-            return (TaskOnFileObjectDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+        return (TaskOnFileObjectDto) super.clone();
     }
 }

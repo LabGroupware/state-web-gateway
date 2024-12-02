@@ -2,9 +2,11 @@ package org.cresplanex.api.state.webgateway.dto.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter @Setter
+@NoArgsConstructor
 @JsonSerialize(using = RelationSerializer.class)
 public class Relation<T extends DeepCloneable> implements Cloneable {
     private boolean hasValue;

@@ -4,10 +4,14 @@ import build.buf.gen.cresplanex.nova.v1.SortOrder;
 import build.buf.gen.userpreference.v1.*;
 import build.buf.gen.userpreference.v1.GetPluralUserPreferencesByUserIdRequest;
 import build.buf.gen.userpreference.v1.GetPluralUserPreferencesByUserIdResponse;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.cresplanex.api.state.common.constants.UserPreferenceServiceApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.CompositionUtils;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userpreference.UserPreferenceDto;
+import org.cresplanex.api.state.webgateway.exception.UserNotFoundException;
 import org.cresplanex.api.state.webgateway.mapper.CommonMapper;
 import org.cresplanex.api.state.webgateway.mapper.UserPreferenceMapper;
 import org.springframework.stereotype.Service;
@@ -24,12 +28,24 @@ public class UserPreferenceQueryProxy {
             String operatorId,
             String userPreferenceId
     ) {
-        FindUserPreferenceResponse response = userPreferenceServiceBlockingStub.findUserPreference(
-                FindUserPreferenceRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setUserPreferenceId(userPreferenceId)
-                        .build()
-        );
+        FindUserPreferenceResponse response;
+        try {
+            response = userPreferenceServiceBlockingStub.findUserPreference(
+                    FindUserPreferenceRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setUserPreferenceId(userPreferenceId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new UserNotFoundException(
+                        UserNotFoundException.FindType.USER_PREFERENCE_ID,
+                        userPreferenceId,
+                        UserPreferenceServiceApplicationCode.NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return UserPreferenceMapper.convert(response.getUserPreference());
     }
 
@@ -37,12 +53,24 @@ public class UserPreferenceQueryProxy {
             String operatorId,
             String userId
     ) {
-        FindUserPreferenceByUserIdResponse response = userPreferenceServiceBlockingStub.findUserPreferenceByUserId(
-                FindUserPreferenceByUserIdRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setUserId(userId)
-                        .build()
-        );
+        FindUserPreferenceByUserIdResponse response;
+        try {
+            response = userPreferenceServiceBlockingStub.findUserPreferenceByUserId(
+                    FindUserPreferenceByUserIdRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setUserId(userId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new UserNotFoundException(
+                        UserNotFoundException.FindType.USER_ID,
+                        userId,
+                        UserPreferenceServiceApplicationCode.NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return UserPreferenceMapper.convert(response.getUserPreference());
     }
 

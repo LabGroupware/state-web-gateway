@@ -2,12 +2,15 @@ package org.cresplanex.api.state.webgateway.proxy.query;
 
 import build.buf.gen.cresplanex.nova.v1.SortOrder;
 import build.buf.gen.team.v1.*;
+import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.cresplanex.api.state.common.constants.TeamServiceApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.CompositionUtils;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamOnUserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnTeamDto;
+import org.cresplanex.api.state.webgateway.exception.TeamNotFoundException;
 import org.cresplanex.api.state.webgateway.mapper.CommonMapper;
 import org.cresplanex.api.state.webgateway.mapper.TeamMapper;
 import org.cresplanex.api.state.webgateway.mapper.UserProfileMapper;
@@ -25,12 +28,24 @@ public class TeamQueryProxy {
             String operatorId,
             String teamId
     ) {
-        FindTeamResponse response = teamServiceBlockingStub.findTeam(
-                FindTeamRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setTeamId(teamId)
-                        .build()
-        );
+        FindTeamResponse response;
+        try {
+            response = teamServiceBlockingStub.findTeam(
+                    FindTeamRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setTeamId(teamId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                throw new TeamNotFoundException(
+                        TeamNotFoundException.FindType.TEAM_ID,
+                        teamId,
+                        TeamServiceApplicationCode.NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return TeamMapper.convert(response.getTeam());
     }
 
@@ -38,12 +53,24 @@ public class TeamQueryProxy {
             String operatorId,
             String teamId
     ) {
-        FindTeamWithUsersResponse response = teamServiceBlockingStub.findTeamWithUsers(
-                FindTeamWithUsersRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setTeamId(teamId)
-                        .build()
-        );
+        FindTeamWithUsersResponse response;
+        try {
+            response = teamServiceBlockingStub.findTeamWithUsers(
+                    FindTeamWithUsersRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setTeamId(teamId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                throw new TeamNotFoundException(
+                        TeamNotFoundException.FindType.TEAM_ID,
+                        teamId,
+                        TeamServiceApplicationCode.NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return TeamMapper.convert(response.getTeam());
     }
 

@@ -23,7 +23,7 @@ public class TaskCompositionService {
     public TaskDto findTask(String operatorId, String taskId, List<String> with) {
         TaskDto task;
         TaskRetriever taskRetriever = TaskRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = TaskCompositionHelper.calculateNeedQuery(List.of(taskRetriever));
         switch (need) {
@@ -51,7 +51,7 @@ public class TaskCompositionService {
         return task;
     }
 
-    public ListResponseDto.InternalData<TaskDto> getTasks(
+    public ListResponseDto.InternalData<TaskDto> getTasksOnTeam(
             String operatorId,
             String teamId,
             int limit,
@@ -76,7 +76,7 @@ public class TaskCompositionService {
     ) {
         ListResponseDto.InternalData<TaskDto> tasks;
         TaskRetriever taskRetriever = TaskRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = TaskCompositionHelper.calculateNeedQuery(List.of(taskRetriever));
         switch (need) {

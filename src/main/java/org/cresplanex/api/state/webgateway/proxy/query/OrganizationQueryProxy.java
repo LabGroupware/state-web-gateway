@@ -2,12 +2,16 @@ package org.cresplanex.api.state.webgateway.proxy.query;
 
 import build.buf.gen.cresplanex.nova.v1.SortOrder;
 import build.buf.gen.organization.v1.*;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.cresplanex.api.state.common.constants.OrganizationServiceApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.CompositionUtils;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationOnUserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileOnOrganizationDto;
+import org.cresplanex.api.state.webgateway.exception.OrganizationNotFoundException;
 import org.cresplanex.api.state.webgateway.mapper.CommonMapper;
 import org.cresplanex.api.state.webgateway.mapper.OrganizationMapper;
 import org.cresplanex.api.state.webgateway.mapper.UserProfileMapper;
@@ -25,12 +29,24 @@ public class OrganizationQueryProxy {
             String operatorId,
             String organizationId
     ) {
-        FindOrganizationResponse response = organizationServiceBlockingStub.findOrganization(
-                FindOrganizationRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setOrganizationId(organizationId)
-                        .build()
-        );
+        FindOrganizationResponse response;
+        try {
+            response = organizationServiceBlockingStub.findOrganization(
+                    FindOrganizationRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setOrganizationId(organizationId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new OrganizationNotFoundException(
+                        OrganizationNotFoundException.FindType.ORGANIZATION_ID,
+                        organizationId,
+                        OrganizationServiceApplicationCode.NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return OrganizationMapper.convert(response.getOrganization());
     }
 
@@ -38,12 +54,24 @@ public class OrganizationQueryProxy {
             String operatorId,
             String organizationId
     ) {
-        FindOrganizationWithUsersResponse response = organizationServiceBlockingStub.findOrganizationWithUsers(
-                FindOrganizationWithUsersRequest.newBuilder()
-                        .setOperatorId(operatorId)
-                        .setOrganizationId(organizationId)
-                        .build()
-        );
+        FindOrganizationWithUsersResponse response;
+        try {
+            response = organizationServiceBlockingStub.findOrganizationWithUsers(
+                    FindOrganizationWithUsersRequest.newBuilder()
+                            .setOperatorId(operatorId)
+                            .setOrganizationId(organizationId)
+                            .build()
+            );
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                throw new OrganizationNotFoundException(
+                        OrganizationNotFoundException.FindType.ORGANIZATION_ID,
+                        organizationId,
+                        OrganizationServiceApplicationCode.NOT_FOUND
+                );
+            }
+            throw e;
+        }
         return OrganizationMapper.convert(response.getOrganization());
     }
 

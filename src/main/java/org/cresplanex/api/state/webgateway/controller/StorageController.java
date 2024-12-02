@@ -76,13 +76,13 @@ public class StorageController {
     public ResponseEntity<ListResponseDto<FileObjectDto>> getFileObjects(
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
-            @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "pagination", required = false) String pagination,
-            @RequestParam(name = "sortField", required = false) String sortField,
-            @RequestParam(name = "sortOrder", required = false) String sortOrder,
+            @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
+            @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
+            @RequestParam(name = "sortField", required = false, defaultValue = "none") String sortField,
+            @RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
             @RequestParam(name = "withCount", required = false, defaultValue = "false") boolean withCount,
             @RequestParam(name = "hasBucketFilter", required = false, defaultValue = "false") boolean hasBucketFilter,
-            @RequestParam(name = "filterBucketIds", required = false) List<String> filterBucketIds,
+            @RequestParam(name = "filterBucketIds", required = false, defaultValue = "") List<String> filterBucketIds,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

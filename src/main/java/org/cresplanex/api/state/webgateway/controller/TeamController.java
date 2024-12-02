@@ -105,18 +105,18 @@ public class TeamController {
     public ResponseEntity<ListResponseDto<TeamDto>> getTeams(
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
-            @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "pagination", required = false) String pagination,
-            @RequestParam(name = "sortField", required = false) String sortField,
-            @RequestParam(name = "sortOrder", required = false) String sortOrder,
+            @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
+            @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
+            @RequestParam(name = "sortField", required = false, defaultValue = "none") String sortField,
+            @RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
             @RequestParam(name = "withCount", required = false, defaultValue = "false") boolean withCount,
             @RequestParam(name = "hasIsDefaultFilter", required = false, defaultValue = "false") boolean hasIsDefaultFilter,
             @RequestParam(name = "filterIsDefault", required = false, defaultValue = "false") boolean filterIsDefault,
             @RequestParam(name = "hasOrganizationFilter", required = false, defaultValue = "false") boolean hasOrganizationFilter,
-            @RequestParam(name = "filterOrganizationIds", required = false) List<String> filterOrganizationIds,
+            @RequestParam(name = "filterOrganizationIds", required = false, defaultValue = "") List<String> filterOrganizationIds,
             @RequestParam(name = "hasUserFilter", required = false, defaultValue = "false") boolean hasUserFilter,
-            @RequestParam(name = "filterUserIds", required = false) List<String> filterUserIds,
-            @RequestParam(name = "userFilterType", required = false) String userFilterType,
+            @RequestParam(name = "filterUserIds", required = false, defaultValue = "") List<String> filterUserIds,
+            @RequestParam(name = "userFilterType", required = false, defaultValue = "none") String userFilterType,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

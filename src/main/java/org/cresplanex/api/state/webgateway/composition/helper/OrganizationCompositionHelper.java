@@ -9,6 +9,7 @@ import org.cresplanex.api.state.webgateway.proxy.query.OrganizationQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.OrganizationRetriever;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,8 +59,8 @@ public class OrganizationCompositionHelper {
                     organization = organizationQueryProxy.getPluralOrganizationsWithUsers(
                             operatorId,
                             needRetrieveAttachedOrganizationIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
 
                     for (OrganizationDto dto : organization) {
@@ -82,8 +83,8 @@ public class OrganizationCompositionHelper {
                     organization = organizationQueryProxy.getPluralOrganizations(
                             operatorId,
                             needRetrieveAttachedOrganizationIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
                     for (OrganizationDto dto : organization) {
                         organizationDtoMap.put(dto.getOrganizationId(), dto);
@@ -106,15 +107,15 @@ public class OrganizationCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 false,
-                null,
+                List.of(),
                 false,
-                null,
+                List.of(),
                 true,
                 userProfileDtos.stream().map(UserProfileDto::getUserId).toList(),
                 "any"
@@ -159,18 +160,18 @@ public class OrganizationCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 true,
                 userProfileDtos.stream().map(UserProfileDto::getUserId).toList(),
                 true,
-                null,
+                List.of(),
                 false,
-                null,
-                null
+                List.of(),
+                "none"
         ).getListData();
 
         Map<String, UserProfileDto> userProfileDtoMap = userProfileDtos.stream()

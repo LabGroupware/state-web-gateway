@@ -36,20 +36,16 @@ public class OrganizationDto extends DomainDto implements DeepCloneable {
 
     @Override
     public OrganizationDto deepClone() {
-        try {
-            OrganizationDto cloned = (OrganizationDto) super.clone();
-            if (users != null){
-                cloned.setUsers(users.clone());
-            }
-            if (owner != null){
-                cloned.setOwner(owner.clone());
-            }
-            if (teams != null){
-                cloned.setTeams(teams.clone());
-            }
-            return cloned;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
+        OrganizationDto cloned = (OrganizationDto) super.clone();
+        if (users != null){
+            cloned.setUsers(users.clone());
         }
+        if (owner != null){
+            cloned.setOwner(owner.clone());
+        }
+        if (teams != null){
+            cloned.setTeams(teams.clone());
+        }
+        return cloned;
     }
 }

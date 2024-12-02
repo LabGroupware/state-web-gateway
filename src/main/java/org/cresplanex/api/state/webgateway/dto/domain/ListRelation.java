@@ -2,11 +2,13 @@ package org.cresplanex.api.state.webgateway.dto.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter @Setter
+@NoArgsConstructor
 @JsonSerialize(using = RelationSerializer.class)
 public class ListRelation<T extends DeepCloneable> implements Cloneable {
     private boolean hasValue;

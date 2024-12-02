@@ -47,8 +47,8 @@ public class UserPreferenceCompositionHelper {
                     userPreference = userPreferenceQueryProxy.getPluralUserPreferencesByUserIds(
                             operatorId,
                             needRetrieveAttachedUserIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
                     for (UserPreferenceDto dto : userPreference) {
                         userPreferenceDtoMap.put(dto.getUserId(), dto);

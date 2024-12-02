@@ -9,9 +9,6 @@ import java.util.List;
 public class CreateTaskRequestDto {
 
     @NotEmpty
-    private String teamId;
-
-    @NotEmpty
     private String chargeUserId;
 
     @NotEmpty

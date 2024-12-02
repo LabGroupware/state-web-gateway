@@ -64,26 +64,22 @@ public class UserProfileDto extends DomainDto implements DeepCloneable {
 
     @Override
     public UserProfileDto deepClone() {
-        try {
-            UserProfileDto cloned = (UserProfileDto) super.clone();
-            if (userPreference != null){
-                cloned.setUserPreference(userPreference.clone());
-            }
-            if (organizations != null){
-                cloned.setOrganizations(organizations.clone());
-            }
-            if (teams != null){
-                cloned.setTeams(teams.clone());
-            }
-            if (ownedOrganizations != null){
-                cloned.setOwnedOrganizations(ownedOrganizations.clone());
-            }
-            if (chargeTasks != null){
-                cloned.setChargeTasks(chargeTasks.clone());
-            }
-            return cloned;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
+        UserProfileDto cloned = (UserProfileDto) super.clone();
+        if (userPreference != null){
+            cloned.setUserPreference(userPreference.clone());
         }
+        if (organizations != null){
+            cloned.setOrganizations(organizations.clone());
+        }
+        if (teams != null){
+            cloned.setTeams(teams.clone());
+        }
+        if (ownedOrganizations != null){
+            cloned.setOwnedOrganizations(ownedOrganizations.clone());
+        }
+        if (chargeTasks != null){
+            cloned.setChargeTasks(chargeTasks.clone());
+        }
+        return cloned;
     }
 }

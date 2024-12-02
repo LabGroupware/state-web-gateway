@@ -9,5 +9,5 @@ public abstract class ServiceException extends RuntimeException {
         super(message, cause);
     }
 
-    abstract public AuthServerError getErrorCode();
+    abstract public ApplicationServerError getErrorCode();
 }

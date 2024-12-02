@@ -23,7 +23,7 @@ public class OrganizationCompositionService {
     public OrganizationDto findOrganization(String operatorId, String organizationId, List<String> with) {
         OrganizationDto organization;
         OrganizationRetriever organizationRetriever = OrganizationRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = OrganizationCompositionHelper.calculateNeedQuery(List.of(organizationRetriever));
         switch (need) {
@@ -71,7 +71,7 @@ public class OrganizationCompositionService {
     ) {
         ListResponseDto.InternalData<OrganizationDto> organizations;
         OrganizationRetriever organizationRetriever = OrganizationRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = OrganizationCompositionHelper.calculateNeedQuery(List.of(organizationRetriever));
         switch (need) {

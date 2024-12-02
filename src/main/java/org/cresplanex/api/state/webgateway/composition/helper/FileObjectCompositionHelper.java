@@ -47,8 +47,8 @@ public class FileObjectCompositionHelper {
                     fileObject = fileObjectQueryProxy.getPluralFileObjects(
                             operatorId,
                             needRetrieveAttachedFileObjectIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
                     for (FileObjectDto dto : fileObject) {
                         fileObjectDtoMap.put(dto.getFileObjectId(), dto);

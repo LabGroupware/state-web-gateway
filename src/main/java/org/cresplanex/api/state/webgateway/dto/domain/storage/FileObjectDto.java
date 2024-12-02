@@ -33,14 +33,10 @@ public class FileObjectDto extends DomainDto implements DeepCloneable {
 
     @Override
     public FileObjectDto deepClone() {
-        try {
-            FileObjectDto cloned = (FileObjectDto) super.clone();
-            if (attachedTasks != null){
-                cloned.setAttachedTasks(attachedTasks.clone());
-            }
-            return cloned;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
+        FileObjectDto cloned = (FileObjectDto) super.clone();
+        if (attachedTasks != null){
+            cloned.setAttachedTasks(attachedTasks.clone());
         }
+        return cloned;
     }
 }

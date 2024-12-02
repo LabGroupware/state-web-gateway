@@ -1,5 +1,6 @@
 package org.cresplanex.api.state.webgateway.retriever.resolver;
 
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationOnUserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
@@ -93,35 +94,35 @@ public class UserProfileRetrieveResolver {
                 continue;
             }
             if (p.startsWith(String.format("%s", UserProfileRetriever.USER_PREFERENCE_RELATION))) {
-                String subPath = p.substring(UserProfileRetriever.USER_PREFERENCE_RELATION.length() + 1);
+                String subPath = p.substring(UserProfileRetriever.USER_PREFERENCE_RELATION.length());
                 if (subPath.startsWith(".")) {
                     userPreferenceRelationPath.add(subPath.substring(1));
                 }else {
                     userPreferenceRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", UserProfileRetriever.ORGANIZATIONS_RELATION))) {
-                String subPath = p.substring(UserProfileRetriever.ORGANIZATIONS_RELATION.length() + 1);
+                String subPath = p.substring(UserProfileRetriever.ORGANIZATIONS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     organizationsRelationPath.add(subPath.substring(1));
                 }else {
                     organizationsRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", UserProfileRetriever.TEAMS_RELATION))) {
-                String subPath = p.substring(UserProfileRetriever.TEAMS_RELATION.length() + 1);
+                String subPath = p.substring(UserProfileRetriever.TEAMS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     teamsRelationPath.add(subPath.substring(1));
                 }else {
                     teamsRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", UserProfileRetriever.OWNED_ORGANIZATIONS_RELATION))) {
-                String subPath = p.substring(UserProfileRetriever.OWNED_ORGANIZATIONS_RELATION.length() + 1);
+                String subPath = p.substring(UserProfileRetriever.OWNED_ORGANIZATIONS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     ownedOrganizationsRelationPath.add(subPath.substring(1));
                 }else {
                     ownedOrganizationsRelationPath.add("");
                 }
             } else if (p.startsWith(String.format("%s", UserProfileRetriever.CHARGE_TASKS_RELATION))) {
-                String subPath = p.substring(UserProfileRetriever.CHARGE_TASKS_RELATION.length() + 1);
+                String subPath = p.substring(UserProfileRetriever.CHARGE_TASKS_RELATION.length());
                 if (subPath.startsWith(".")) {
                     chargeTasksRelationPath.add(subPath.substring(1));
                 }else {

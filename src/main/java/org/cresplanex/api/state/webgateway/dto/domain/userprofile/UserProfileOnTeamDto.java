@@ -72,10 +72,6 @@ public class UserProfileOnTeamDto extends UserProfileDto implements OverMerge<Us
 
     @Override
     public UserProfileOnTeamDto deepClone() {
-        try {
-            return (UserProfileOnTeamDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+        return (UserProfileOnTeamDto) super.clone();
     }
 }

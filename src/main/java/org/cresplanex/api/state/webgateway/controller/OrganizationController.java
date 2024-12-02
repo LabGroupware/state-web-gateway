@@ -110,16 +110,16 @@ public class OrganizationController {
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
             @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
             @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
-            @RequestParam(name = "sort_field", required = false) String sortField,
+            @RequestParam(name = "sort_field", required = false, defaultValue = "none") String sortField,
             @RequestParam(name = "sort_order", required = false, defaultValue = "asc") String sortOrder,
             @RequestParam(name = "with_count", required = false, defaultValue = "false") boolean withCount,
             @RequestParam(name = "has_owner_filter", required = false, defaultValue = "false") boolean hasOwnerFilter,
-            @RequestParam(name = "filter_owner_ids", required = false) List<String> filterOwnerIds,
+            @RequestParam(name = "filter_owner_ids", required = false, defaultValue = "") List<String> filterOwnerIds,
             @RequestParam(name = "has_plan_filter", required = false, defaultValue = "false") boolean hasPlanFilter,
-            @RequestParam(name = "filter_plans", required = false) List<String> filterPlans,
+            @RequestParam(name = "filter_plans", required = false, defaultValue = "") List<String> filterPlans,
             @RequestParam(name = "has_user_filter", required = false, defaultValue = "false") boolean hasUserFilter,
-            @RequestParam(name = "filter_user_ids", required = false) List<String> filterUserIds,
-            @RequestParam(name = "user_filter_type", required = false, defaultValue = "any") String userFilterType,
+            @RequestParam(name = "filter_user_ids", required = false, defaultValue = "") List<String> filterUserIds,
+            @RequestParam(name = "user_filter_type", required = false, defaultValue = "none") String userFilterType,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

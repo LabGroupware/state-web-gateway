@@ -23,7 +23,7 @@ public class TeamCompositionService {
     public TeamDto findTeam(String operatorId, String teamId, List<String> with) {
         TeamDto team;
         TeamRetriever teamRetriever = TeamRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = TeamCompositionHelper.calculateNeedQuery(List.of(teamRetriever));
         switch (need) {
@@ -71,7 +71,7 @@ public class TeamCompositionService {
     ) {
         ListResponseDto.InternalData<TeamDto> teams;
         TeamRetriever teamRetriever = TeamRetrieveResolver.resolve(
-                with.toArray(new String[0])
+                with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = TeamCompositionHelper.calculateNeedQuery(List.of(teamRetriever));
         switch (need) {

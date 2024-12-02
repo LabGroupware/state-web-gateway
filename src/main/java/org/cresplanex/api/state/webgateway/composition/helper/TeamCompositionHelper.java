@@ -59,8 +59,8 @@ public class TeamCompositionHelper {
                     team = teamQueryProxy.getPluralTeamsWithUsers(
                             operatorId,
                             needRetrieveAttachedTeamIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
 
                     for (TeamDto dto : team) {
@@ -83,8 +83,8 @@ public class TeamCompositionHelper {
                     team = teamQueryProxy.getPluralTeams(
                             operatorId,
                             needRetrieveAttachedTeamIds,
-                            null,
-                            null
+                            "none",
+                            "asc"
                     ).getListData();
                     for (TeamDto dto : team) {
                         teamDtoMap.put(dto.getTeamId(), dto);
@@ -107,15 +107,15 @@ public class TeamCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 false,
                 false,
                 false,
-                null,
+                List.of(),
                 true,
                 userProfileDtos.stream().map(UserProfileDto::getUserId).toList(),
                 "any"
@@ -160,18 +160,18 @@ public class TeamCompositionHelper {
                 operatorId,
                 0,
                 0,
-                null,
-                null,
-                null,
-                null,
+                "",
+                "none",
+                "none",
+                "asc",
                 false,
                 false,
                 false,
                 true,
                 organizationDtos.stream().map(OrganizationDto::getOrganizationId).toList(),
                 false,
-                null,
-                null
+                List.of(),
+                "none"
         ).getListData();
 
         Map<String, OrganizationDto> organizationDtoMap = organizationDtos.stream()
