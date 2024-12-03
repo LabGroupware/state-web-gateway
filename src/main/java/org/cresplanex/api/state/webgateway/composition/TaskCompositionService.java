@@ -51,9 +51,8 @@ public class TaskCompositionService {
         return task;
     }
 
-    public ListResponseDto.InternalData<TaskDto> getTasksOnTeam(
+    public ListResponseDto.InternalData<TaskDto> getTasks(
             String operatorId,
-            String teamId,
             int limit,
             int offset,
             String cursor,
@@ -61,6 +60,8 @@ public class TaskCompositionService {
             String sortField,
             String sortOrder,
             boolean withCount,
+            boolean hasTeamFilter,
+            List<String> filterTeamIds,
             boolean hasStatusFilter,
             List<String> filterStatuses,
             boolean hasChargeUserFilter,
@@ -90,8 +91,8 @@ public class TaskCompositionService {
                         sortField,
                         sortOrder,
                         withCount,
-                        true,
-                        List.of(teamId),
+                        hasTeamFilter,
+                        filterTeamIds,
                         hasStatusFilter,
                         filterStatuses,
                         hasChargeUserFilter,
@@ -115,8 +116,8 @@ public class TaskCompositionService {
                         sortField,
                         sortOrder,
                         withCount,
-                        true,
-                        List.of(teamId),
+                        hasTeamFilter,
+                        filterTeamIds,
                         hasStatusFilter,
                         filterStatuses,
                         hasChargeUserFilter,

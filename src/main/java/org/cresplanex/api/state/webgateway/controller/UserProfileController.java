@@ -27,7 +27,7 @@ public class UserProfileController {
     private final UserCompositionService userCompositionService;
 
     @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
-    public ResponseEntity<ResponseDto<UserProfileDto>> getUserProfile(
+    public ResponseEntity<ResponseDto<UserProfileDto>> findUserProfile(
             @PathVariable String userId,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
@@ -48,7 +48,7 @@ public class UserProfileController {
     }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<ListResponseDto<UserProfileDto>> getUserProfile(
+    public ResponseEntity<ListResponseDto<UserProfileDto>> getUserProfiles(
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
             @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,

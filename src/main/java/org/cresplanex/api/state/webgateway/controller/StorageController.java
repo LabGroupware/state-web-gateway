@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/storages")
+@RequestMapping("/file-objects")
 @AllArgsConstructor
 public class StorageController {
 
@@ -51,7 +51,7 @@ public class StorageController {
     }
 
     @RequestMapping(value = "/{fileObjectId}", method = RequestMethod.GET)
-    public ResponseEntity<ResponseDto<FileObjectDto>> getFileObject(
+    public ResponseEntity<ResponseDto<FileObjectDto>> findFileObject(
             @PathVariable String fileObjectId,
             @RequestParam(name = "with", required = false) List<String> with
     ) {

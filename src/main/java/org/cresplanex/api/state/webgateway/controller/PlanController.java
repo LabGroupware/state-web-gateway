@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/teams/{teamId}/tasks")
+@RequestMapping("/tasks")
 @AllArgsConstructor
 public class PlanController {
 
@@ -35,13 +35,12 @@ public class PlanController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> createTask(
-            @PathVariable String teamId,
             @Valid @RequestBody CreateTaskRequestDto requestDTO,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         TaskWithAttachments task = TaskWithAttachments.newBuilder()
                 .setTask(Task.newBuilder()
-                        .setTeamId(teamId)
+                        .setTeamId(requestDTO.getTeamId())
                         .setChargeUserId(requestDTO.getChargeUserId())
                         .setTitle(requestDTO.getTitle())
                         .setDescription(requestDTO.getDescription())
@@ -72,12 +71,10 @@ public class PlanController {
 
     @RequestMapping(value = "/{taskId}/status", method = RequestMethod.PUT)
     public ResponseEntity<CommandResponseDto> updateStatusTask(
-            @PathVariable String teamId,
             @PathVariable String taskId,
             @Valid @RequestBody UpdateStatusTaskRequestDto requestDTO,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        // TODO: TaskのTeam所属チェック
         String jobId = planCommandServiceProxy.updateStatusTask(userDetails.getUsername(), taskId, requestDTO.getStatus());
 
         CommandResponseDto response = new CommandResponseDto();
@@ -92,14 +89,12 @@ public class PlanController {
 
     @RequestMapping(value = "/{taskId}", method = RequestMethod.GET)
     public ResponseEntity<ResponseDto<TaskDto>> findTask(
-            @PathVariable String teamId,
             @PathVariable String taskId,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
 
-        // TODO: TaskのTeam所属チェック
         TaskDto task = taskCompositionService.findTask(
                 jwt.getSubject(),
                 taskId,
@@ -117,7 +112,6 @@ public class PlanController {
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<ListResponseDto<TaskDto>> getTasks(
-            @PathVariable String teamId,
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
             @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
@@ -125,6 +119,8 @@ public class PlanController {
             @RequestParam(name = "sortField", required = false, defaultValue = "none") String sortField,
             @RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
             @RequestParam(name = "withCount", required = false, defaultValue = "false") boolean withCount,
+            @RequestParam(name = "hasTeamFilter", required = false, defaultValue = "false") boolean hasTeamFilter,
+            @RequestParam(name = "filterTeamIds", required = false, defaultValue = "") List<String> filterTeamIds,
             @RequestParam(name = "hasStatusFilter", required = false, defaultValue = "false") boolean hasStatusFilter,
             @RequestParam(name = "filterStatuses", required = false, defaultValue = "") List<String> filterStatuses,
             @RequestParam(name = "hasChargeUserFilter", required = false, defaultValue = "false") boolean hasChargeUserFilter,
@@ -141,9 +137,8 @@ public class PlanController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
 
-        ListResponseDto.InternalData<TaskDto> tasks = taskCompositionService.getTasksOnTeam(
+        ListResponseDto.InternalData<TaskDto> tasks = taskCompositionService.getTasks(
                 jwt.getSubject(),
-                teamId,
                 limit,
                 offset,
                 cursor,
@@ -151,6 +146,8 @@ public class PlanController {
                 sortField,
                 sortOrder,
                 withCount,
+                hasTeamFilter,
+                filterTeamIds,
                 hasStatusFilter,
                 filterStatuses,
                 hasChargeUserFilter,
