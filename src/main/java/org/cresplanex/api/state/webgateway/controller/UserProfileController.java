@@ -1,14 +1,21 @@
 package org.cresplanex.api.state.webgateway.controller;
 
+import build.buf.gen.team.v1.Team;
+import build.buf.gen.team.v1.TeamUserRequestType;
 import build.buf.gen.userprofile.v1.UserProfile;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.common.constants.WebGatewayApplicationCode;
 import org.cresplanex.api.state.webgateway.composition.UserCompositionService;
+import org.cresplanex.api.state.webgateway.dto.CommandResponseDto;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.ResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
+import org.cresplanex.api.state.webgateway.dto.team.CreateTeamRequestDto;
+import org.cresplanex.api.state.webgateway.dto.userprofile.CreateUserProfileRequestDto;
 import org.cresplanex.api.state.webgateway.proxy.command.UserPreferenceCommandServiceProxy;
+import org.cresplanex.api.state.webgateway.proxy.command.UserProfileCommandServiceProxy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,8 +30,33 @@ import java.util.List;
 @AllArgsConstructor
 public class UserProfileController {
 
-    private final UserPreferenceCommandServiceProxy userPreferenceCommandServiceProxy;
+    private final UserProfileCommandServiceProxy userProfileCommandServiceProxy;
     private final UserCompositionService userCompositionService;
+
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public ResponseEntity<CommandResponseDto> createUserProfile(
+            @Valid @RequestBody CreateUserProfileRequestDto requestDTO
+            ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        UserProfile userProfile = UserProfile.newBuilder()
+                .setName(requestDTO.getName())
+                .setEmail(requestDTO.getEmail())
+                .setUserId(requestDTO.getUserId())
+                .build();
+
+
+        String jobId = userProfileCommandServiceProxy.createUserProfile(jwt.getSubject(), userProfile);
+
+        CommandResponseDto response = new CommandResponseDto();
+
+        response.setSuccess(true);
+        response.setData(new CommandResponseDto.InternalData(jobId));
+        response.setCode(WebGatewayApplicationCode.SUCCESS);
+        response.setCaption("User profile create pending.");
+
+        return ResponseEntity.ok(response);
+    }
 
     @RequestMapping(value = "/{userId}", method = RequestMethod.GET)
     public ResponseEntity<ResponseDto<UserProfileDto>> findUserProfile(
