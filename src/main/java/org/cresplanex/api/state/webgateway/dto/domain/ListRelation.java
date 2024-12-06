@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor
-@JsonSerialize(using = RelationSerializer.class)
+@JsonSerialize(using = ListRelationSerializer.class)
 public class ListRelation<T extends DeepCloneable> implements Cloneable {
     private boolean hasValue;
     private List<T> value;

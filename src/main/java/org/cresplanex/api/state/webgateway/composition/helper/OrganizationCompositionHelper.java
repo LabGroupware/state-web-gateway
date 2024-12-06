@@ -1,5 +1,6 @@
 package org.cresplanex.api.state.webgateway.composition.helper;
 
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationOnUserProfileDto;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class OrganizationCompositionHelper {
 
     public static final int NEED_ORGANIZATION_USERS = 1 << 0;
@@ -126,16 +128,27 @@ public class OrganizationCompositionHelper {
         Map<String, List<OrganizationOnUserProfileDto>> organizationOnUserProfileDtoMap = new HashMap<>();
 
         for (OrganizationDto dto : relationOrganizations) {
+            log.info("clone before dto: {}", dto);
             cache.getCache().put(OrganizationHasher.hashOrganizationWithUsers(dto.getOrganizationId()), dto.deepClone());
+            log.info("clone after dto: {}", dto);
             if (dto.getUsers().isHasValue()) {
                 dto.getUsers().getValue().forEach(userOnOrganization -> {
                     UserProfileDto targetUserProfileDto = userProfileDtoMap.get(userOnOrganization.getUserId());
                     if (targetUserProfileDto != null) {
+                        log.info("targetUserProfileDto: {}", targetUserProfileDto);
+                        log.info("dto: {}", dto);
+                        OrganizationOnUserProfileDto organizationOnUserProfileDto = new OrganizationOnUserProfileDto(dto);
+                        log.info("organizationOnUserProfileDto id: {}", organizationOnUserProfileDto.getOrganizationId());
+                        log.info("new OrganizationOnUserProfileDto(dto): {}", new OrganizationOnUserProfileDto(dto));
                         organizationOnUserProfileDtoMap.computeIfAbsent(targetUserProfileDto.getUserId(), k -> new ArrayList<>()).add(new OrganizationOnUserProfileDto(dto));
                     }
                 });
             }
         }
+
+        log.info("organizationOnUserProfileDtoMap: {}", organizationOnUserProfileDtoMap);
+        log.info("userProfileDtoMap: {}", userProfileDtoMap);
+        log.info("cache: {}", cache.getCache());
 
         for (Map.Entry<String, List<OrganizationOnUserProfileDto>> entry : organizationOnUserProfileDtoMap.entrySet()) {
             UserProfileDto targetUserProfileDto = userProfileDtoMap.get(entry.getKey());

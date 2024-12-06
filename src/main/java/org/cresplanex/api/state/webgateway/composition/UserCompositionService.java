@@ -44,6 +44,7 @@ public class UserCompositionService {
                 );
                 break;
         }
+        log.info("userProfile: {}", userProfile);
         RetrievedCacheContainer cache = new RetrievedCacheContainer();
         attachRelationUserProfile.attach(
                 operatorId,
@@ -55,7 +56,7 @@ public class UserCompositionService {
         return userProfile;
     }
 
-    public UserPreferenceDto findUserPreference(String operatorId, String userId, List<String> with) {
+    public UserPreferenceDto findUserPreference(String operatorId, String userPreferenceId, List<String> with) {
         UserPreferenceDto userPreference;
         UserPreferenceRetriever userPreferenceRetriever = UserPreferenceRetrieveResolver.resolve(
                 with != null ? with.toArray(new String[0]) : new String[0]
@@ -63,9 +64,9 @@ public class UserCompositionService {
         int need = UserPreferenceCompositionHelper.calculateNeedQuery(List.of(userPreferenceRetriever));
         switch (need) {
             default:
-                userPreference = userPreferenceQueryProxy.findUserPreferenceByUserId(
+                userPreference = userPreferenceQueryProxy.findUserPreference(
                         operatorId,
-                        userId
+                        userPreferenceId
                 );
                 break;
         }

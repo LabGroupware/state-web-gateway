@@ -1,6 +1,7 @@
 package org.cresplanex.api.state.webgateway.composition.attach;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.composition.helper.OrganizationCompositionHelper;
 import org.cresplanex.api.state.webgateway.composition.helper.TaskCompositionHelper;
 import org.cresplanex.api.state.webgateway.composition.helper.TeamCompositionHelper;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AttachRelationUserProfile {
@@ -37,6 +39,7 @@ public class AttachRelationUserProfile {
 
         // organizations
         if (retriever.getOrganizationsRelationRetriever() != null) {
+            log.info("attachRelationToOrganizations");
             OrganizationCompositionHelper.preAttachToUserProfile(
                     organizationQueryProxy,
                     cache,
