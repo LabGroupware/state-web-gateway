@@ -5,6 +5,7 @@ import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationFile
 import org.cresplanex.api.state.webgateway.composition.helper.FileObjectCompositionHelper;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectDto;
+import org.cresplanex.api.state.webgateway.hasher.FileObjectHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.FileObjectQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.FileObjectRetriever;
@@ -26,15 +27,16 @@ public class FileObjectCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = FileObjectCompositionHelper.calculateNeedQuery(List.of(fileObjectRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             default:
                 fileObject = fileObjectQueryProxy.findFileObject(
                         operatorId,
                         fileObjectId
                 );
+                cache.getCache().put(FileObjectHasher.hashFileObject(fileObjectId), fileObject.deepClone());
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         attachRelationFileObject.attach(
                 operatorId,
                 cache,
@@ -63,6 +65,7 @@ public class FileObjectCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = FileObjectCompositionHelper.calculateNeedQuery(List.of(fileObjectRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             default:
                 fileObjects = fileObjectQueryProxy.getFileObjects(
@@ -77,9 +80,11 @@ public class FileObjectCompositionService {
                         hasBucketFilter,
                         filterBucketIds
                 );
+                for (FileObjectDto dto : fileObjects.getListData()) {
+                    cache.getCache().put(FileObjectHasher.hashFileObject(dto.getFileObjectId()), dto.deepClone());
+                }
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         attachRelationFileObject.attach(
                 operatorId,
                 cache,

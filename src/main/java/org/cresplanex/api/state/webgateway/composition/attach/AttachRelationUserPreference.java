@@ -20,19 +20,23 @@ public class AttachRelationUserPreference {
     private final TaskQueryProxy taskQueryProxy;
     private final FileObjectQueryProxy fileObjectQueryProxy;
 
-    public <T extends UserPreferenceDto> void attach(
+    public <T extends UserPreferenceDto> T attach(
             String operatorId,
             RetrievedCacheContainer cache,
             UserPreferenceRetriever retriever,
             T userPreferenceDto
     ) {
+
+        return userPreferenceDto;
     }
 
-    public <T extends UserPreferenceDto> void attach(
+    public <T extends UserPreferenceDto> List<T> attach(
             String operatorId,
             RetrievedCacheContainer cache,
             UserPreferenceRetriever retriever,
             List<T> userPreferenceDto
     ) {
+
+        return userPreferenceDto;
     }
 }

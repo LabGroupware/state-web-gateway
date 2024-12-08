@@ -9,6 +9,8 @@ import org.cresplanex.api.state.webgateway.composition.helper.UserProfileComposi
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userpreference.UserPreferenceDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
+import org.cresplanex.api.state.webgateway.hasher.UserPreferenceHasher;
+import org.cresplanex.api.state.webgateway.hasher.UserProfileHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.UserPreferenceQueryProxy;
 import org.cresplanex.api.state.webgateway.proxy.query.UserProfileQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
@@ -36,16 +38,17 @@ public class UserCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = UserProfileCompositionHelper.calculateNeedQuery(List.of(userProfileRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             default:
                 userProfile = userProfileQueryProxy.findUserProfileByUserId(
                         operatorId,
                         userId
                 );
+                cache.getCache().put(UserProfileHasher.hashUserProfileByUserId(userId), userProfile.deepClone());
                 break;
         }
-        log.info("userProfile: {}", userProfile);
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+
         attachRelationUserProfile.attach(
                 operatorId,
                 cache,
@@ -62,15 +65,17 @@ public class UserCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = UserPreferenceCompositionHelper.calculateNeedQuery(List.of(userPreferenceRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             default:
                 userPreference = userPreferenceQueryProxy.findUserPreference(
                         operatorId,
                         userPreferenceId
                 );
+                cache.getCache().put(UserPreferenceHasher.hashUserPreference(userPreferenceId), userPreference.deepClone());
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+
         attachRelationUserPreference.attach(
                 operatorId,
                 cache,
@@ -97,6 +102,7 @@ public class UserCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = UserProfileCompositionHelper.calculateNeedQuery(List.of(userProfileRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             default:
                 userProfiles = userProfileQueryProxy.getUserProfiles(
@@ -109,9 +115,13 @@ public class UserCompositionService {
                         sortOrder,
                         withCount
                 );
+                for (UserProfileDto dto : userProfiles.getListData()) {
+                    cache.getCache().put(UserProfileHasher.hashUserProfileByUserId(dto.getUserId()), dto.deepClone());
+                    cache.getCache().put(UserProfileHasher.hashUserProfile(dto.getUserProfileId()), dto.deepClone());
+                }
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+
         attachRelationUserProfile.attach(
                 operatorId,
                 cache,

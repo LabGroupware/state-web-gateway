@@ -1,5 +1,6 @@
 package org.cresplanex.api.state.webgateway.composition.helper;
 
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
 import org.cresplanex.api.state.webgateway.hasher.UserProfileHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.UserProfileQueryProxy;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class UserProfileCompositionHelper {
 
     public static int calculateNeedQuery(List<UserProfileRetriever> retrievers) {
@@ -37,7 +39,6 @@ public class UserProfileCompositionHelper {
                 for (String userId : userIds) {
                     if (cache.getCache().containsKey(UserProfileHasher.hashUserProfileByUserId(userId))) {
                         userProfileDtoMap.put(userId, ((UserProfileDto) cache.getCache().get(UserProfileHasher.hashUserProfileByUserId(userId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedUserIds.add(userId);
                     }
@@ -53,6 +54,7 @@ public class UserProfileCompositionHelper {
                     for (UserProfileDto dto : userProfile) {
                         userProfileDtoMap.put(dto.getUserId(), dto);
                         cache.getCache().put(UserProfileHasher.hashUserProfileByUserId(dto.getUserId()), dto.deepClone());
+                        cache.getCache().put(UserProfileHasher.hashUserProfile(dto.getUserProfileId()), dto.deepClone());
                     }
                 }
                 break;

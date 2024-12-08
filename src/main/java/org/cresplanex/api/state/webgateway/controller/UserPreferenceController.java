@@ -32,13 +32,15 @@ public class UserPreferenceController {
             @PathVariable String userPreferenceId,
             @RequestBody UpdateUserPreferenceRequestDto updateUserPreferenceRequestDto
     ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
         UserPreference userPreference = UserPreference.newBuilder()
                         .setUserPreferenceId(userPreferenceId)
                         .setTimezone(ValueFromNullable.toNullableString(updateUserPreferenceRequestDto.getTimezone()))
                         .setLanguage(ValueFromNullable.toNullableString(updateUserPreferenceRequestDto.getLanguage()))
                         .setTheme(ValueFromNullable.toNullableString(updateUserPreferenceRequestDto.getTheme()))
                         .build();
-        String jobId = userPreferenceCommandServiceProxy.updateUserPreference(userPreferenceId, userPreference);
+        String jobId = userPreferenceCommandServiceProxy.updateUserPreference(jwt.getSubject(), userPreference);
 
         CommandResponseDto response = new CommandResponseDto();
 

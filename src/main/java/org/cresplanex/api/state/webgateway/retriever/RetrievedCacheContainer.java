@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.cresplanex.api.state.webgateway.dto.domain.DomainDto;
 
 import java.util.HashMap;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -16,9 +15,9 @@ public class RetrievedCacheContainer {
      * Key: hash of the kind of data
      * Value: Map of retrieved data(Key: id, Value: DomainDto)
      */
-    Map<String, DomainDto> cache;
+    HashMap<String, DomainDto> cache;
 
-    public RetrievedCacheContainer(Map<String, DomainDto> cache) {
+    public RetrievedCacheContainer(HashMap<String, DomainDto> cache) {
         this.cache = cache;
     }
 

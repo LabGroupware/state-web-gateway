@@ -12,8 +12,7 @@ import org.cresplanex.api.state.webgateway.retriever.domain.FileObjectRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +25,7 @@ public class AttachRelationFileObject {
     private final TaskQueryProxy taskQueryProxy;
     private final FileObjectQueryProxy fileObjectQueryProxy;
 
-    public <T extends FileObjectDto> void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, T fileObjectDto) {
+    public <T extends FileObjectDto> T attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, T fileObjectDto) {
 
         // attachedTasks
         if (retriever.getAttachedTasksRelationRetriever() != null) {
@@ -48,13 +47,14 @@ public class AttachRelationFileObject {
                     cache,
                     fileObjectDto,
                     taskDtoMap,
-                    retriever.getAttachedTasksRelationRetriever().getRelationRetriever().apply(fileObjectDto),
                     retriever.getAttachedTasksRelationRetriever().getChain()
             );
         }
+
+        return fileObjectDto;
     }
 
-    public <T extends FileObjectDto> void attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<T> fileObjectDto) {
+    public <T extends FileObjectDto> List<T> attach(String operatorId, RetrievedCacheContainer cache, FileObjectRetriever retriever, List<T> fileObjectDto) {
         // AttachedTasks
         if (retriever.getAttachedTasksRelationRetriever() != null) {
             TaskCompositionHelper.preAttachToFileObject(
@@ -71,6 +71,7 @@ public class AttachRelationFileObject {
                     fileObjectDto.stream()
                             .map(retriever.getAttachedTasksRelationRetriever().getIdRetriever())
                             .flatMap(List::stream)
+                            .distinct()
                             .toList(),
                     retriever.getAttachedTasksRelationRetriever().getChain()
             );
@@ -80,17 +81,16 @@ public class AttachRelationFileObject {
                     cache,
                     fileObjectDto,
                     taskDtoMap,
-                    fileObjectDto.stream()
-                            .map(retriever.getAttachedTasksRelationRetriever().getRelationRetriever())
-                            .toList(),
                     retriever.getAttachedTasksRelationRetriever().getChain()
             );
         }
+
+        return fileObjectDto;
     }
 
-    private <T extends FileObjectDto> void internalAttachRelationToTasks(
+    private <T extends FileObjectDto, U extends TaskDto> void internalAttachRelationToTasks(
             T fileObjectDto,
-            Map<String, TaskDto> taskDtoMap
+            Map<String, U> taskDtoMap
     ) {
         if(fileObjectDto.getAttachedTasks().isHasValue()) {
             List<TaskOnFileObjectDto> originAttachTasks = fileObjectDto.getAttachedTasks().getValue();
@@ -98,16 +98,16 @@ public class AttachRelationFileObject {
                     .stream()
                     .map(TaskDto::getTaskId)
                     .toList();
-            List<TaskDto> attachAttachedTasks = attachAttachedTaskIds.stream()
+            List<U> attachAttachedTasks = attachAttachedTaskIds.stream()
                     .map(taskDtoMap::get)
                     .toList();
             fileObjectDto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
+                    .hasValue(true)
                     .value(
                             attachAttachedTasks.stream()
-                                    .map(newTask -> new TaskOnFileObjectDto(newTask, originAttachTasks.stream()
-                                            .filter(origin -> origin.getTaskId().equals(newTask.getTaskId()))
-                                            .findFirst()
-                                            .orElse(null)))
+                                    .map(task -> new TaskOnFileObjectDto(task.merge(originAttachTasks.stream()
+                                            .filter(origin -> origin.getTaskId().equals(task.getTaskId()))
+                                            .findFirst().orElse(null))))
                                     .toList()
                     )
                     .build()
@@ -120,13 +120,12 @@ public class AttachRelationFileObject {
             RetrievedCacheContainer cache,
             T fileObjectDto,
             Map<String, TaskDto> taskDtoMap,
-            ListRelation<TaskOnFileObjectDto> tasksRelation,
             List<TaskRetriever> retrievers
     ) {
         this.internalAttachRelationToTasks(fileObjectDto, taskDtoMap);
         if(fileObjectDto.getAttachedTasks().isHasValue()) {
             retrievers.forEach(retriever -> {
-                if (retriever != null && tasksRelation.isHasValue() && tasksRelation.getValue() != null) {
+                if (retriever != null && fileObjectDto.getAttachedTasks().isHasValue() && fileObjectDto.getAttachedTasks().getValue() != null) {
                     AttachRelationTask attachRelationTask = new AttachRelationTask(
                             userProfileQueryProxy,
                             teamQueryProxy,
@@ -135,7 +134,15 @@ public class AttachRelationFileObject {
                             taskQueryProxy,
                             fileObjectQueryProxy
                     );
-                    attachRelationTask.attach(operatorId, cache, retriever, tasksRelation.getValue());
+                    var attached = attachRelationTask.attach(operatorId, cache, retriever, fileObjectDto.getAttachedTasks().getValue());
+
+                    Map<String, TaskOnFileObjectDto> attachedMap = new HashMap<>();
+
+                    for (TaskOnFileObjectDto taskOnFileObjectDto : attached) {
+                        attachedMap.put(taskOnFileObjectDto.getTaskId(), taskOnFileObjectDto);
+                    }
+
+                    this.internalAttachRelationToTasks(fileObjectDto, attachedMap);
                 }
             });
         }
@@ -146,18 +153,13 @@ public class AttachRelationFileObject {
             RetrievedCacheContainer cache,
             List<T> fileObjectDto,
             Map<String, TaskDto> taskDtoMap,
-            List<ListRelation<TaskOnFileObjectDto>> tasksRelation,
             List<TaskRetriever> retrievers
     ) {
         for (FileObjectDto dto : fileObjectDto) {
             this.internalAttachRelationToTasks(dto, taskDtoMap);
         }
         retrievers.forEach(retriever -> {
-            List<List<TaskOnFileObjectDto>> tasksRelationList = tasksRelation.stream()
-                    .filter(ListRelation::isHasValue)
-                    .map(ListRelation::getValue)
-                    .toList();
-            if (retriever != null && !tasksRelationList.isEmpty()) {
+            if (retriever != null) {
                 AttachRelationTask attachRelationTask = new AttachRelationTask(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -166,7 +168,28 @@ public class AttachRelationFileObject {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationTask.attach(operatorId, cache, retriever, tasksRelationList.stream().flatMap(List::stream).toList());
+                Set<String> seenIds = new HashSet<>();
+                List<TaskOnFileObjectDto> tasks = fileObjectDto.stream()
+                        .flatMap(fileObject -> fileObject.getAttachedTasks().getValue().stream())
+                        .filter(task -> seenIds.add(task.getTaskId()))
+                        .toList();
+
+                var attached = attachRelationTask.attach(
+                        operatorId,
+                        cache,
+                        retriever,
+                        tasks
+                );
+
+                Map<String, TaskOnFileObjectDto> attachedMap = new HashMap<>();
+
+                for (TaskOnFileObjectDto taskOnFileObjectDto : attached) {
+                    attachedMap.put(taskOnFileObjectDto.getTaskId(), taskOnFileObjectDto);
+                }
+
+                for (T dto : fileObjectDto) {
+                    this.internalAttachRelationToTasks(dto, attachedMap);
+                }
             }
         });
     }

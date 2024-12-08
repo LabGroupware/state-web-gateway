@@ -6,11 +6,14 @@ import org.cresplanex.api.state.webgateway.proxy.query.UserPreferenceQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.UserPreferenceRetriever;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class UserPreferenceCompositionHelper {
 
     public static int calculateNeedQuery(List<UserPreferenceRetriever> retrievers) {
@@ -37,7 +40,6 @@ public class UserPreferenceCompositionHelper {
                 for (String userId : userIds) {
                     if (cache.getCache().containsKey(UserPreferenceHasher.hashUserPreferenceByUserId(userId))) {
                         userPreferenceDtoMap.put(userId, ((UserPreferenceDto) cache.getCache().get(UserPreferenceHasher.hashUserPreferenceByUserId(userId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedUserIds.add(userId);
                     }
@@ -53,6 +55,7 @@ public class UserPreferenceCompositionHelper {
                     for (UserPreferenceDto dto : userPreference) {
                         userPreferenceDtoMap.put(dto.getUserId(), dto);
                         cache.getCache().put(UserPreferenceHasher.hashUserPreferenceByUserId(dto.getUserId()), dto.deepClone());
+                        cache.getCache().put(UserPreferenceHasher.hashUserPreference(dto.getUserPreferenceId()), dto.deepClone());
                     }
                 }
                 break;

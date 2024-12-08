@@ -35,9 +35,10 @@ public class PlanController {
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> createTask(
-            @Valid @RequestBody CreateTaskRequestDto requestDTO,
-            @AuthenticationPrincipal UserDetails userDetails
+            @Valid @RequestBody CreateTaskRequestDto requestDTO
     ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
         TaskWithAttachments task = TaskWithAttachments.newBuilder()
                 .setTask(Task.newBuilder()
                         .setTeamId(requestDTO.getTeamId())
@@ -57,7 +58,7 @@ public class PlanController {
                                 .toList()
                 )
                 .build();
-        String jobId = planCommandServiceProxy.createTask(userDetails.getUsername(), task);
+        String jobId = planCommandServiceProxy.createTask(jwt.getSubject(), task);
 
         CommandResponseDto response = new CommandResponseDto();
 
@@ -72,10 +73,11 @@ public class PlanController {
     @RequestMapping(value = "/{taskId}/status", method = RequestMethod.PUT)
     public ResponseEntity<CommandResponseDto> updateStatusTask(
             @PathVariable String taskId,
-            @Valid @RequestBody UpdateStatusTaskRequestDto requestDTO,
-            @AuthenticationPrincipal UserDetails userDetails
+            @Valid @RequestBody UpdateStatusTaskRequestDto requestDTO
     ) {
-        String jobId = planCommandServiceProxy.updateStatusTask(userDetails.getUsername(), taskId, requestDTO.getStatus());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String jobId = planCommandServiceProxy.updateStatusTask(jwt.getSubject(), taskId, requestDTO.getStatus());
 
         CommandResponseDto response = new CommandResponseDto();
 

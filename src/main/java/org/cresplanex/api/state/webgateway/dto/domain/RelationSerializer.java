@@ -16,7 +16,7 @@ public class RelationSerializer<T extends DeepCloneable> extends JsonSerializer<
             } else {
                 gen.writeObject(relation.getValue().deepClone());
             }
-        } else {
+        }else {
             gen.writeNull();
         }
     }

@@ -12,20 +12,20 @@ public class ListRelationSerializer<T extends DeepCloneable> extends JsonSeriali
 
     @Override
     public void serialize(ListRelation<T> relation, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        log.info(relation.toString());
-
         if (relation.isHasValue()) {
-            log.info(relation.getValue().toString());
             if (relation.getValue() == null) {
                 gen.writeNull();
             } else {
                 gen.writeStartArray();
                 for (T t : relation.getValue()) {
+                    if (t == null) {
+                        gen.writeNull();
+                        continue;
+                    }
                     gen.writeObject(t.deepClone());
                     gen.flush();
                 }
                 gen.writeEndArray();
-                gen.close();
             }
         }else {
             gen.writeNull();

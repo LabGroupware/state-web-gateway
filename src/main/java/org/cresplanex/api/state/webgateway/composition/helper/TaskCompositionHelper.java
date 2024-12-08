@@ -1,6 +1,7 @@
 package org.cresplanex.api.state.webgateway.composition.helper;
 
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
+import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationOnUserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskOnFileObjectDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectDto;
@@ -51,7 +52,6 @@ public class TaskCompositionHelper {
                 for (String taskId : taskIds) {
                     if (cache.getCache().containsKey(TaskHasher.hashTaskWithAttachments(taskId))) {
                         taskDtoMap.put(taskId, ((TaskDto) cache.getCache().get(TaskHasher.hashTaskWithAttachments(taskId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedTaskIds.add(taskId);
                     }
@@ -74,7 +74,6 @@ public class TaskCompositionHelper {
                 for (String taskId : taskIds) {
                     if (cache.getCache().containsKey(TaskHasher.hashTask(taskId))) {
                         taskDtoMap.put(taskId, ((TaskDto) cache.getCache().get(TaskHasher.hashTask(taskId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedTaskIds.add(taskId);
                     }
@@ -128,8 +127,12 @@ public class TaskCompositionHelper {
                 "any"
         ).getListData();
 
-        Map<String, FileObjectDto> fileObjectDtoMap = fileObjectDtos.stream()
-                .collect(Collectors.toMap(FileObjectDto::getFileObjectId, Function.identity()));
+        Map<String, FileObjectDto> fileObjectDtoMap = new HashMap<>();
+
+        for (FileObjectDto dto : fileObjectDtos) {
+            fileObjectDtoMap.put(dto.getFileObjectId(), dto);
+        }
+
         Map<String, List<TaskOnFileObjectDto>> taskOnFileObjectDtoMap = new HashMap<>();
 
         for (TaskDto dto : relationTasks) {
@@ -155,6 +158,14 @@ public class TaskCompositionHelper {
                     .build()
             );
         }
+
+        fileObjectDtos.stream().filter(dto -> !taskOnFileObjectDtoMap.containsKey(dto.getFileObjectId())).forEach(dto -> {
+            dto.setAttachedTasks(ListRelation.<TaskOnFileObjectDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 
     public static <T extends UserProfileDto> void preAttachToChargeUser(
@@ -187,8 +198,11 @@ public class TaskCompositionHelper {
                 "none"
         ).getListData();
 
-        Map<String, UserProfileDto> userProfileDtoMap = userProfileDtos.stream()
-                .collect(Collectors.toMap(UserProfileDto::getUserId, Function.identity()));
+        Map<String, UserProfileDto> userProfileDtoMap = new HashMap<>();
+
+        for (UserProfileDto dto : userProfileDtos) {
+            userProfileDtoMap.put(dto.getUserId(), dto);
+        }
         Map<String, List<TaskDto>> taskDtoMap = new HashMap<>();
 
         for (TaskDto dto : relationTasks) {
@@ -210,6 +224,14 @@ public class TaskCompositionHelper {
                     .build()
             );
         }
+
+        userProfileDtos.stream().filter(dto -> !taskDtoMap.containsKey(dto.getUserId())).forEach(dto -> {
+            dto.setChargeTasks(ListRelation.<TaskDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 
     public static  <T extends TeamDto> void preAttachToTeam(
@@ -242,8 +264,11 @@ public class TaskCompositionHelper {
                 "none"
         ).getListData();
 
-        Map<String, TeamDto> teamDtoMap = teamDtos.stream()
-                .collect(Collectors.toMap(TeamDto::getTeamId, Function.identity()));
+        Map<String, TeamDto> teamDtoMap = new HashMap<>();
+
+        for (TeamDto dto : teamDtos) {
+            teamDtoMap.put(dto.getTeamId(), dto);
+        }
         Map<String, List<TaskDto>> taskDtoMap = new HashMap<>();
 
         for (TaskDto dto : relationTasks) {
@@ -265,5 +290,13 @@ public class TaskCompositionHelper {
                     .build()
             );
         }
+
+        teamDtos.stream().filter(dto -> !taskDtoMap.containsKey(dto.getTeamId())).forEach(dto -> {
+            dto.setTasks(ListRelation.<TaskDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 }

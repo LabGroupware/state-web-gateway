@@ -1,5 +1,7 @@
 package org.cresplanex.api.state.webgateway.composition.helper;
 
+import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
+import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
 import org.cresplanex.api.state.webgateway.dto.domain.storage.FileObjectDto;
 import org.cresplanex.api.state.webgateway.hasher.FileObjectHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.FileObjectQueryProxy;
@@ -37,7 +39,6 @@ public class FileObjectCompositionHelper {
                 for (String fileObjectId : fileObjectIds) {
                     if (cache.getCache().containsKey(FileObjectHasher.hashFileObject(fileObjectId))) {
                         fileObjectDtoMap.put(fileObjectId, ((FileObjectDto) cache.getCache().get(FileObjectHasher.hashFileObject(fileObjectId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedFileObjectIds.add(fileObjectId);
                     }

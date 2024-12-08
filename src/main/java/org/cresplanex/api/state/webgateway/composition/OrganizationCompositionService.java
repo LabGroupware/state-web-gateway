@@ -1,10 +1,14 @@
 package org.cresplanex.api.state.webgateway.composition;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationOrganization;
 import org.cresplanex.api.state.webgateway.composition.helper.OrganizationCompositionHelper;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
+import org.cresplanex.api.state.webgateway.hasher.OrganizationHasher;
+import org.cresplanex.api.state.webgateway.hasher.UserProfileHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.OrganizationQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.OrganizationRetriever;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class OrganizationCompositionService {
@@ -26,21 +31,23 @@ public class OrganizationCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = OrganizationCompositionHelper.calculateNeedQuery(List.of(organizationRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             case OrganizationCompositionHelper.GET_ORGANIZATION_WITH_USERS:
                 organization = organizationQueryProxy.findOrganizationWithUsers(
                         operatorId,
                         organizationId
                 );
+                cache.getCache().put(OrganizationHasher.hashOrganizationWithUsers(organizationId), organization.deepClone());
                 break;
             default:
                 organization = organizationQueryProxy.findOrganization(
                         operatorId,
                         organizationId
                 );
+                cache.getCache().put(OrganizationHasher.hashOrganization(organizationId), organization.deepClone());
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         attachRelationOrganization.attach(
                 operatorId,
                 cache,
@@ -74,6 +81,7 @@ public class OrganizationCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = OrganizationCompositionHelper.calculateNeedQuery(List.of(organizationRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             case OrganizationCompositionHelper.GET_ORGANIZATION_WITH_USERS:
                 organizations = organizationQueryProxy.getOrganizationsWithUsers(
@@ -93,6 +101,9 @@ public class OrganizationCompositionService {
                         filterUserIds,
                         userFilterType
                 );
+                for (OrganizationDto dto : organizations.getListData()) {
+                    cache.getCache().put(OrganizationHasher.hashOrganizationWithUsers(dto.getOrganizationId()), dto.deepClone());
+                }
                 break;
             default:
                 organizations = organizationQueryProxy.getOrganizations(
@@ -112,9 +123,12 @@ public class OrganizationCompositionService {
                         filterUserIds,
                         userFilterType
                 );
+                for (OrganizationDto dto : organizations.getListData()) {
+                    cache.getCache().put(OrganizationHasher.hashOrganization(dto.getOrganizationId()), dto.deepClone());
+                }
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+
         attachRelationOrganization.attach(
                 operatorId,
                 cache,

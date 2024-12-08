@@ -1,5 +1,6 @@
 package org.cresplanex.api.state.webgateway.controller;
 
+import build.buf.gen.cresplanex.nova.v1.NullableString;
 import build.buf.gen.team.v1.Team;
 import build.buf.gen.team.v1.TeamUserRequestType;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.cresplanex.api.state.webgateway.dto.CommandResponseDto;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.ResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
+import org.cresplanex.api.state.webgateway.dto.team.AddUsersTeamRequestDto;
 import org.cresplanex.api.state.webgateway.dto.team.CreateTeamRequestDto;
 import org.cresplanex.api.state.webgateway.proxy.command.TeamCommandServiceProxy;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,8 @@ public class TeamController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
         Team team = Team.newBuilder()
+                .setOrganizationId(requestDTO.getOrganizationId())
+                .setDescription(NullableString.newBuilder().setHasValue(true).setValue(requestDTO.getDescription()).build())
                 .setName(requestDTO.getName())
                 .build();
         List<TeamUserRequestType> users = requestDTO.getUserIds().stream()
@@ -57,11 +61,11 @@ public class TeamController {
     @RequestMapping(value = "/{teamId}/users", method = RequestMethod.POST)
     public ResponseEntity<CommandResponseDto> addUsersToTeam(
             @PathVariable String teamId,
-            @Valid @RequestBody List<String> userIds
+            @Valid @RequestBody AddUsersTeamRequestDto requestDto
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        List<TeamUserRequestType> users = userIds.stream()
+        List<TeamUserRequestType> users = requestDto.getUserIds().stream()
                 .map(user -> TeamUserRequestType.newBuilder()
                         .setUserId(user)
                         .build())

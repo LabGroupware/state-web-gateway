@@ -45,7 +45,7 @@ public class UserProfileRetrieveResolver {
         if (!result.teamsRelationPath.isEmpty()) {
             userProfileRetriever.setTeamsRelationRetriever(
                     ListRelationRetrieverBuilder.<TeamOnUserProfileDto, UserProfileDto, TeamRetriever>builder()
-                            .idRetriever(dto -> dto.getTeams().isHasValue() ?
+                            .idRetriever(dto -> dto.getTeams() != null && dto.getTeams().isHasValue() ?
                                     dto.getTeams().getValue().stream().map(TeamOnUserProfileDto::getTeamId).toList() : null)
                             .relationRetriever(UserProfileDto::getTeams)
                             .chain(

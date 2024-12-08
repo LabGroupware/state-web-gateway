@@ -17,6 +17,7 @@ public class TeamMapper {
 
     public static TeamDto convert(Team team) {
         return TeamDto.builder()
+                .organizationId(team.getOrganizationId())
                 .teamId(team.getTeamId())
                 .name(team.getName())
                 .description(team.getDescription().getHasValue() ? team.getDescription().getValue() : null)
@@ -35,6 +36,7 @@ public class TeamMapper {
 
     public static TeamDto convert(TeamWithUsers team) {
         return TeamDto.builder()
+                .organizationId(team.getTeam().getOrganizationId())
                 .teamId(team.getTeam().getTeamId())
                 .name(team.getTeam().getName())
                 .description(team.getTeam().getDescription().getHasValue() ? team.getTeam().getDescription().getValue() : null)

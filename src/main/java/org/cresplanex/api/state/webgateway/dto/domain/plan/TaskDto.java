@@ -54,4 +54,48 @@ public class TaskDto extends DomainDto implements DeepCloneable {
         }
         return cloned;
     }
+
+    public TaskDto merge(TaskDto taskDto) {
+        if (taskDto == null) {
+            return this;
+        }
+
+        if (taskDto.getAttachments() != null && taskDto.getAttachments().isHasValue()) {
+            if (this.getAttachments() == null || !this.getAttachments().isHasValue()) {
+                this.setAttachments(taskDto.getAttachments());
+            } else {
+                for (FileObjectOnTaskDto fileObjectOnTaskDto : taskDto.getAttachments().getValue()) {
+                    boolean isExist = false;
+                    for (FileObjectOnTaskDto thisFileObjectOnTaskDto : this.getAttachments().getValue()) {
+                        if (fileObjectOnTaskDto.getFileObjectId().equals(thisFileObjectOnTaskDto.getFileObjectId())) {
+                            thisFileObjectOnTaskDto.merge(fileObjectOnTaskDto);
+                            isExist = true;
+                            break;
+                        }
+                    }
+                    if (!isExist) {
+                        this.getAttachments().getValue().add(fileObjectOnTaskDto);
+                    }
+                }
+            }
+        }
+
+        if (taskDto.getTeam() != null && taskDto.getTeam().isHasValue()) {
+            if (this.getTeam() == null || !this.getTeam().isHasValue()) {
+                this.setTeam(taskDto.getTeam());
+            } else {
+                this.getTeam().getValue().merge(taskDto.getTeam().getValue());
+            }
+        }
+
+        if (taskDto.getChargeUser() != null && taskDto.getChargeUser().isHasValue()) {
+            if (this.getChargeUser() == null || !this.getChargeUser().isHasValue()) {
+                this.setChargeUser(taskDto.getChargeUser());
+            } else {
+                this.getChargeUser().getValue().merge(taskDto.getChargeUser().getValue());
+            }
+        }
+
+        return this;
+    }
 }

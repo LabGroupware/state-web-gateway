@@ -1,7 +1,9 @@
 package org.cresplanex.api.state.webgateway.composition.helper;
 
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.dto.domain.ListRelation;
 import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationDto;
+import org.cresplanex.api.state.webgateway.dto.domain.organization.OrganizationOnUserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamDto;
 import org.cresplanex.api.state.webgateway.dto.domain.team.TeamOnUserProfileDto;
 import org.cresplanex.api.state.webgateway.dto.domain.userprofile.UserProfileDto;
@@ -10,13 +12,11 @@ import org.cresplanex.api.state.webgateway.proxy.query.TeamQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.TeamRetriever;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class TeamCompositionHelper {
 
     public static final int NEED_TEAM_USERS = 1 << 0;
@@ -50,11 +50,11 @@ public class TeamCompositionHelper {
                 for (String teamId : teamIds) {
                     if (cache.getCache().containsKey(TeamHasher.hashTeamWithUsers(teamId))) {
                         teamDtoMap.put(teamId, ((TeamDto) cache.getCache().get(TeamHasher.hashTeamWithUsers(teamId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedTeamIds.add(teamId);
                     }
                 }
+                log.info("needRetrieveAttachedTeamIds: {}", needRetrieveAttachedTeamIds);
                 if (!needRetrieveAttachedTeamIds.isEmpty()) {
                     team = teamQueryProxy.getPluralTeamsWithUsers(
                             operatorId,
@@ -73,12 +73,10 @@ public class TeamCompositionHelper {
                 for (String teamId : teamIds) {
                     if (cache.getCache().containsKey(TeamHasher.hashTeam(teamId))) {
                         teamDtoMap.put(teamId, ((TeamDto) cache.getCache().get(TeamHasher.hashTeam(teamId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedTeamIds.add(teamId);
                     }
                 }
-
                 if (!needRetrieveAttachedTeamIds.isEmpty()) {
                     team = teamQueryProxy.getPluralTeams(
                             operatorId,
@@ -121,8 +119,12 @@ public class TeamCompositionHelper {
                 "any"
         ).getListData();
 
-        Map<String, UserProfileDto> userProfileDtoMap = userProfileDtos.stream()
-                .collect(Collectors.toMap(UserProfileDto::getUserId, Function.identity()));
+        Map<String, UserProfileDto> userProfileDtoMap = new HashMap<>();
+
+        for (UserProfileDto dto : userProfileDtos) {
+            userProfileDtoMap.put(dto.getUserId(), dto);
+        }
+
         Map<String, List<TeamOnUserProfileDto>> teamOnUserProfileDtoMap = new HashMap<>();
 
         for (TeamDto dto : relationTeams) {
@@ -138,6 +140,7 @@ public class TeamCompositionHelper {
         }
 
         for (Map.Entry<String, List<TeamOnUserProfileDto>> entry : teamOnUserProfileDtoMap.entrySet()) {
+
             UserProfileDto targetUserProfileDto = userProfileDtoMap.get(entry.getKey());
             if (targetUserProfileDto == null) {
                 continue;
@@ -148,6 +151,14 @@ public class TeamCompositionHelper {
                     .build()
             );
         }
+
+        userProfileDtos.stream().filter(dto -> !teamOnUserProfileDtoMap.containsKey(dto.getUserId())).forEach(dto -> {
+            dto.setTeams(ListRelation.<TeamOnUserProfileDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 
     public static <T extends OrganizationDto> void preAttachToOrganization(
@@ -174,8 +185,12 @@ public class TeamCompositionHelper {
                 "none"
         ).getListData();
 
-        Map<String, OrganizationDto> organizationDtoMap = organizationDtos.stream()
-                .collect(Collectors.toMap(OrganizationDto::getOrganizationId, Function.identity()));
+        Map<String, OrganizationDto> organizationDtoMap = new HashMap<>();
+
+        for (OrganizationDto dto : organizationDtos) {
+            organizationDtoMap.put(dto.getOrganizationId(), dto);
+        }
+
         Map<String, List<TeamDto>> teamDtoMap = new HashMap<>();
 
         for (TeamDto dto : relationTeams) {
@@ -197,5 +212,13 @@ public class TeamCompositionHelper {
                     .build()
             );
         }
+
+        organizationDtos.stream().filter(dto -> !teamDtoMap.containsKey(dto.getOrganizationId())).forEach(dto -> {
+            dto.setTeams(ListRelation.<TeamDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 }

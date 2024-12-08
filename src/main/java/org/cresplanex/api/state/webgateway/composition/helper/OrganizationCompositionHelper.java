@@ -52,7 +52,6 @@ public class OrganizationCompositionHelper {
                 for (String organizationId : organizationIds) {
                     if (cache.getCache().containsKey(OrganizationHasher.hashOrganizationWithUsers(organizationId))) {
                         organizationDtoMap.put(organizationId, ((OrganizationDto) cache.getCache().get(OrganizationHasher.hashOrganizationWithUsers(organizationId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedOrganizationIds.add(organizationId);
                     }
@@ -75,7 +74,6 @@ public class OrganizationCompositionHelper {
                 for (String organizationId : organizationIds) {
                     if (cache.getCache().containsKey(OrganizationHasher.hashOrganization(organizationId))) {
                         organizationDtoMap.put(organizationId, ((OrganizationDto) cache.getCache().get(OrganizationHasher.hashOrganization(organizationId))).deepClone());
-                        break;
                     } else {
                         needRetrieveAttachedOrganizationIds.add(organizationId);
                     }
@@ -123,33 +121,25 @@ public class OrganizationCompositionHelper {
                 "any"
         ).getListData();
 
-        Map<String, UserProfileDto> userProfileDtoMap = userProfileDtos.stream()
-                .collect(Collectors.toMap(UserProfileDto::getUserId, Function.identity()));
+        Map<String, UserProfileDto> userProfileDtoMap = new HashMap<>();
+
+        for (UserProfileDto dto : userProfileDtos) {
+            userProfileDtoMap.put(dto.getUserId(), dto);
+        }
+
         Map<String, List<OrganizationOnUserProfileDto>> organizationOnUserProfileDtoMap = new HashMap<>();
 
         for (OrganizationDto dto : relationOrganizations) {
-            log.info("clone before dto: {}", dto);
             cache.getCache().put(OrganizationHasher.hashOrganizationWithUsers(dto.getOrganizationId()), dto.deepClone());
-            log.info("clone after dto: {}", dto);
             if (dto.getUsers().isHasValue()) {
                 dto.getUsers().getValue().forEach(userOnOrganization -> {
                     UserProfileDto targetUserProfileDto = userProfileDtoMap.get(userOnOrganization.getUserId());
                     if (targetUserProfileDto != null) {
-                        log.info("targetUserProfileDto: {}", targetUserProfileDto);
-                        log.info("dto: {}", dto);
-                        OrganizationOnUserProfileDto organizationOnUserProfileDto = new OrganizationOnUserProfileDto(dto);
-                        log.info("organizationOnUserProfileDto id: {}", organizationOnUserProfileDto.getOrganizationId());
-                        log.info("new OrganizationOnUserProfileDto(dto): {}", new OrganizationOnUserProfileDto(dto));
                         organizationOnUserProfileDtoMap.computeIfAbsent(targetUserProfileDto.getUserId(), k -> new ArrayList<>()).add(new OrganizationOnUserProfileDto(dto));
                     }
                 });
             }
         }
-
-        log.info("organizationOnUserProfileDtoMap: {}", organizationOnUserProfileDtoMap);
-        log.info("userProfileDtoMap: {}", userProfileDtoMap);
-        log.info("cache: {}", cache.getCache());
-
         for (Map.Entry<String, List<OrganizationOnUserProfileDto>> entry : organizationOnUserProfileDtoMap.entrySet()) {
             UserProfileDto targetUserProfileDto = userProfileDtoMap.get(entry.getKey());
             if (targetUserProfileDto == null) {
@@ -161,6 +151,13 @@ public class OrganizationCompositionHelper {
                     .build()
             );
         }
+        userProfileDtos.stream().filter(dto -> !organizationOnUserProfileDtoMap.containsKey(dto.getUserId())).forEach(dto -> {
+            dto.setOrganizations(ListRelation.<OrganizationOnUserProfileDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 
     public static <T extends UserProfileDto> void preAttachToOwner(
@@ -169,6 +166,7 @@ public class OrganizationCompositionHelper {
             String operatorId,
             List<T> userProfileDtos
     ) {
+        log.info("userProfileIds: {}", userProfileDtos.stream().map(UserProfileDto::getUserId).toList());
         List<OrganizationDto> relationOrganizations = organizationQueryProxy.getOrganizations(
                 operatorId,
                 0,
@@ -187,8 +185,11 @@ public class OrganizationCompositionHelper {
                 "none"
         ).getListData();
 
-        Map<String, UserProfileDto> userProfileDtoMap = userProfileDtos.stream()
-                .collect(Collectors.toMap(UserProfileDto::getUserId, Function.identity()));
+        Map<String, UserProfileDto> userProfileDtoMap = new HashMap<>();
+
+        for (UserProfileDto dto : userProfileDtos) {
+            userProfileDtoMap.put(dto.getUserId(), dto);
+        }
         Map<String, List<OrganizationDto>> organizationDtoMap = new HashMap<>();
 
         for (OrganizationDto dto : relationOrganizations) {
@@ -210,5 +211,12 @@ public class OrganizationCompositionHelper {
                     .build()
             );
         }
+        userProfileDtos.stream().filter(dto -> !organizationDtoMap.containsKey(dto.getUserId())).forEach(dto -> {
+            dto.setOwnedOrganizations(ListRelation.<OrganizationDto>builder()
+                    .hasValue(true)
+                    .value(List.of())
+                    .build()
+            );
+        });
     }
 }

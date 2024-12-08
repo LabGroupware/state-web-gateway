@@ -5,6 +5,7 @@ import org.cresplanex.api.state.webgateway.composition.attach.AttachRelationTask
 import org.cresplanex.api.state.webgateway.composition.helper.TaskCompositionHelper;
 import org.cresplanex.api.state.webgateway.dto.ListResponseDto;
 import org.cresplanex.api.state.webgateway.dto.domain.plan.TaskDto;
+import org.cresplanex.api.state.webgateway.hasher.TaskHasher;
 import org.cresplanex.api.state.webgateway.proxy.query.TaskQueryProxy;
 import org.cresplanex.api.state.webgateway.retriever.RetrievedCacheContainer;
 import org.cresplanex.api.state.webgateway.retriever.domain.TaskRetriever;
@@ -26,21 +27,24 @@ public class TaskCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = TaskCompositionHelper.calculateNeedQuery(List.of(taskRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             case TaskCompositionHelper.GET_TASK_ATTACHED_FILE_OBJECTS:
                 task = taskQueryProxy.findTaskWithAttachments(
                         operatorId,
                         taskId
                 );
+                cache.getCache().put(TaskHasher.hashTaskWithAttachments(taskId), task.deepClone());
                 break;
             default:
                 task = taskQueryProxy.findTask(
                         operatorId,
                         taskId
                 );
+                cache.getCache().put(TaskHasher.hashTask(taskId), task.deepClone());
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
+
         attachRelationTask.attach(
                 operatorId,
                 cache,
@@ -80,6 +84,7 @@ public class TaskCompositionService {
                 with != null ? with.toArray(new String[0]) : new String[0]
         );
         int need = TaskCompositionHelper.calculateNeedQuery(List.of(taskRetriever));
+        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         switch (need) {
             case TaskCompositionHelper.GET_TASK_ATTACHED_FILE_OBJECTS:
                 tasks = taskQueryProxy.getTasksWithAttachments(
@@ -105,6 +110,9 @@ public class TaskCompositionService {
                         filterFileObjectIds,
                         fileObjectFilterType
                 );
+                for (TaskDto dto : tasks.getListData()) {
+                    cache.getCache().put(TaskHasher.hashTaskWithAttachments(dto.getTaskId()), dto.deepClone());
+                }
                 break;
             default:
                 tasks = taskQueryProxy.getTasks(
@@ -130,9 +138,11 @@ public class TaskCompositionService {
                         filterFileObjectIds,
                         fileObjectFilterType
                 );
+                for (TaskDto dto : tasks.getListData()) {
+                    cache.getCache().put(TaskHasher.hashTask(dto.getTaskId()), dto.deepClone());
+                }
                 break;
         }
-        RetrievedCacheContainer cache = new RetrievedCacheContainer();
         attachRelationTask.attach(
                 operatorId,
                 cache,

@@ -1,6 +1,7 @@
 package org.cresplanex.api.state.webgateway.composition.attach;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.cresplanex.api.state.webgateway.composition.helper.FileObjectCompositionHelper;
 import org.cresplanex.api.state.webgateway.composition.helper.TeamCompositionHelper;
 import org.cresplanex.api.state.webgateway.composition.helper.UserProfileCompositionHelper;
@@ -19,9 +20,9 @@ import org.cresplanex.api.state.webgateway.retriever.domain.TeamRetriever;
 import org.cresplanex.api.state.webgateway.retriever.domain.UserProfileRetriever;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AttachRelationTask {
@@ -33,7 +34,7 @@ public class AttachRelationTask {
     private final TaskQueryProxy taskQueryProxy;
     private final FileObjectQueryProxy fileObjectQueryProxy;
 
-    public <T extends TaskDto> void attach(String operatorId, RetrievedCacheContainer cache, TaskRetriever retriever, T taskDto) {
+    public <T extends TaskDto> T attach(String operatorId, RetrievedCacheContainer cache, TaskRetriever retriever, T taskDto) {
 
         // ChargeUser
         if (retriever.getChargeUserRelationRetriever() != null) {
@@ -52,7 +53,6 @@ public class AttachRelationTask {
                     cache,
                     taskDto,
                     userProfileDtoMap,
-                    retriever.getChargeUserRelationRetriever().getRelationRetriever().apply(taskDto),
                     retriever.getChargeUserRelationRetriever().getChain()
             );
         }
@@ -74,7 +74,6 @@ public class AttachRelationTask {
                     cache,
                     taskDto,
                     teamDtoMap,
-                    retriever.getTeamRelationRetriever().getRelationRetriever().apply(taskDto),
                     retriever.getTeamRelationRetriever().getChain()
             );
         }
@@ -94,13 +93,14 @@ public class AttachRelationTask {
                     cache,
                     taskDto,
                     fileObjectDtoMap,
-                    retriever.getAttachmentsRelationRetriever().getRelationRetriever().apply(taskDto),
                     retriever.getAttachmentsRelationRetriever().getChain()
             );
         }
+
+        return taskDto;
     }
 
-    public <T extends TaskDto> void attach(String operatorId, RetrievedCacheContainer cache, TaskRetriever retriever, List<T> taskDto) {
+    public <T extends TaskDto> List<T> attach(String operatorId, RetrievedCacheContainer cache, TaskRetriever retriever, List<T> taskDto) {
 
         // ChargeUser
         if (retriever.getChargeUserRelationRetriever() != null) {
@@ -119,9 +119,6 @@ public class AttachRelationTask {
                     cache,
                     taskDto,
                     userProfileDtoMap,
-                    taskDto.stream()
-                            .map(retriever.getChargeUserRelationRetriever().getRelationRetriever())
-                            .toList(),
                     retriever.getChargeUserRelationRetriever().getChain()
             );
         }
@@ -138,14 +135,16 @@ public class AttachRelationTask {
                     retriever.getTeamRelationRetriever().getChain()
             );
 
+
+            teamDtoMap.entrySet().forEach(entry -> {
+                log.info("Key: " + entry.getKey() + " Value: " + entry.getValue());
+            });
+
             this.attachRelationToTeam(
                     operatorId,
                     cache,
                     taskDto,
                     teamDtoMap,
-                    taskDto.stream()
-                            .map(retriever.getTeamRelationRetriever().getRelationRetriever())
-                            .toList(),
                     retriever.getTeamRelationRetriever().getChain()
             );
         }
@@ -159,6 +158,7 @@ public class AttachRelationTask {
                     taskDto.stream()
                             .map(retriever.getAttachmentsRelationRetriever().getIdRetriever())
                             .flatMap(List::stream)
+                            .distinct()
                             .toList(),
                     retriever.getAttachmentsRelationRetriever().getChain()
             );
@@ -168,22 +168,21 @@ public class AttachRelationTask {
                     cache,
                     taskDto,
                     fileObjectDtoMap,
-                    taskDto.stream()
-                            .map(retriever.getAttachmentsRelationRetriever().getRelationRetriever())
-                            .toList(),
                     retriever.getAttachmentsRelationRetriever().getChain()
             );
         }
+
+        return taskDto;
     }
 
     private <T extends TaskDto> void internalAttachRelationToChargeUser(
             T taskDto,
-            Map<String, UserProfileDto> userProfileDtoMap,
-            String chargeUserId
+            Map<String, UserProfileDto> userProfileDtoMap
     ) {
+        UserProfileDto originUserProfile = taskDto.getChargeUser().getValue();
         taskDto.setChargeUser(Relation.<UserProfileDto>builder()
                 .hasValue(true)
-                .value(userProfileDtoMap.get(chargeUserId))
+                .value(userProfileDtoMap.get(taskDto.getChargeUserId()).merge(originUserProfile))
                 .build()
         );
     }
@@ -193,12 +192,11 @@ public class AttachRelationTask {
             RetrievedCacheContainer cache,
             T taskDto,
             Map<String, UserProfileDto> userProfileDtoMap,
-            Relation<UserProfileDto> chargeUserRelation,
             List<UserProfileRetriever> retrievers
     ) {
-        this.internalAttachRelationToChargeUser(taskDto, userProfileDtoMap, taskDto.getChargeUserId());
+        this.internalAttachRelationToChargeUser(taskDto, userProfileDtoMap);
         retrievers.forEach(retriever -> {
-            if (retriever != null && chargeUserRelation.isHasValue() && chargeUserRelation.getValue() != null) {
+            if (retriever != null) {
                 AttachRelationUserProfile attachRelationUserProfile = new AttachRelationUserProfile(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -207,7 +205,13 @@ public class AttachRelationTask {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationUserProfile.attach(operatorId, cache, retriever, chargeUserRelation.getValue());
+                var attached = attachRelationUserProfile.attach(operatorId, cache, retriever, taskDto.getChargeUser().getValue());
+
+                Map<String, UserProfileDto> attachedMap = new HashMap<>();
+
+                attachedMap.put(attached.getUserId(), attached);
+
+                this.internalAttachRelationToChargeUser(taskDto, attachedMap);
             }
         });
     }
@@ -217,17 +221,14 @@ public class AttachRelationTask {
             RetrievedCacheContainer cache,
             List<T> taskDto,
             Map<String, UserProfileDto> userProfileDtoMap,
-            List<Relation<UserProfileDto>> chargeUserRelation,
             List<UserProfileRetriever> retrievers
     ) {
         for (T dto : taskDto) {
-            this.internalAttachRelationToChargeUser(dto, userProfileDtoMap, dto.getChargeUserId());
+            this.internalAttachRelationToChargeUser(dto, userProfileDtoMap);
         }
+
         retrievers.forEach(retriever -> {
-            List<UserProfileDto> chargeUserList = chargeUserRelation.stream()
-                    .map(Relation::getValue)
-                    .toList();
-            if (retriever != null && !chargeUserList.isEmpty()) {
+            if (retriever != null) {
                 AttachRelationUserProfile attachRelationUserProfile = new AttachRelationUserProfile(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -236,19 +237,31 @@ public class AttachRelationTask {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationUserProfile.attach(operatorId, cache, retriever, chargeUserList);
+                var attached = attachRelationUserProfile.attach(operatorId, cache, retriever, taskDto.stream()
+                        .map(T::getChargeUser)
+                        .map(Relation::getValue)
+                        .toList());
+
+                Map<String, UserProfileDto> attachedMap = new HashMap<>();
+                for (UserProfileDto userProfileDto : attached) {
+                    attachedMap.put(userProfileDto.getUserId(), userProfileDto);
+                }
+
+                for (T dto : taskDto) {
+                    this.internalAttachRelationToChargeUser(dto, attachedMap);
+                }
             }
         });
     }
 
     private <T extends TaskDto> void internalAttachRelationToTeam(
             T taskDto,
-            Map<String, TeamDto> teamDtoMap,
-            String teamId
+            Map<String, TeamDto> teamDtoMap
     ) {
+        TeamDto originTeam = taskDto.getTeam().getValue();
         taskDto.setTeam(Relation.<TeamDto>builder()
                 .hasValue(true)
-                .value(teamDtoMap.get(teamId))
+                .value(teamDtoMap.get(taskDto.getTeamId()).merge(originTeam))
                 .build()
         );
     }
@@ -258,12 +271,11 @@ public class AttachRelationTask {
             RetrievedCacheContainer cache,
             T taskDto,
             Map<String, TeamDto> teamDtoMap,
-            Relation<TeamDto> teamRelation,
             List<TeamRetriever> retrievers
     ) {
-        this.internalAttachRelationToTeam(taskDto, teamDtoMap, taskDto.getTeam().getValue().getTeamId());
+        this.internalAttachRelationToTeam(taskDto, teamDtoMap);
         retrievers.forEach(retriever -> {
-            if (retriever != null && teamRelation.isHasValue() && teamRelation.getValue() != null) {
+            if (retriever != null) {
                 AttachRelationTeam attachRelationTeam = new AttachRelationTeam(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -272,7 +284,13 @@ public class AttachRelationTask {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationTeam.attach(operatorId, cache, retriever, teamRelation.getValue());
+                var attached = attachRelationTeam.attach(operatorId, cache, retriever, taskDto.getTeam().getValue());
+
+                Map<String, TeamDto> attachedMap = new HashMap<>();
+
+                attachedMap.put(attached.getTeamId(), attached);
+
+                this.internalAttachRelationToTeam(taskDto, attachedMap);
             }
         });
     }
@@ -282,17 +300,13 @@ public class AttachRelationTask {
             RetrievedCacheContainer cache,
             List<T> taskDto,
             Map<String, TeamDto> teamDtoMap,
-            List<Relation<TeamDto>> teamRelation,
             List<TeamRetriever> retrievers
     ) {
         for (T dto : taskDto) {
-            this.internalAttachRelationToTeam(dto, teamDtoMap, dto.getTeam().getValue().getTeamId());
+            this.internalAttachRelationToTeam(dto, teamDtoMap);
         }
         retrievers.forEach(retriever -> {
-            List<TeamDto> teamList = teamRelation.stream()
-                    .map(Relation::getValue)
-                    .toList();
-            if (retriever != null && !teamList.isEmpty()) {
+            if (retriever != null) {
                 AttachRelationTeam attachRelationTeam = new AttachRelationTeam(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -301,7 +315,19 @@ public class AttachRelationTask {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationTeam.attach(operatorId, cache, retriever, teamList);
+                var attached = attachRelationTeam.attach(operatorId, cache, retriever, taskDto.stream()
+                        .map(T::getTeam)
+                        .map(Relation::getValue)
+                        .toList());
+
+                Map<String, TeamDto> attachedMap = new HashMap<>();
+                for (TeamDto teamDto : attached) {
+                    attachedMap.put(teamDto.getTeamId(), teamDto);
+                }
+
+                for (T dto : taskDto) {
+                    this.internalAttachRelationToTeam(dto, attachedMap);
+                }
             }
         });
     }
@@ -320,12 +346,13 @@ public class AttachRelationTask {
                     .map(fileObjectDtoMap::get)
                     .toList();
             taskDto.setAttachments(ListRelation.<FileObjectOnTaskDto>builder()
+                    .hasValue(true)
                     .value(
                             attachFileObjects.stream()
-                                    .map(file -> new FileObjectOnTaskDto(file, originAttachFileObjects.stream()
+                                    .map(file -> new FileObjectOnTaskDto(file.merge(originAttachFileObjects.stream()
                                             .filter(origin -> origin.getFileObjectId().equals(file.getFileObjectId()))
                                             .findFirst()
-                                            .orElse(null)))
+                                            .orElse(null))))
                                     .toList()
                     )
                     .build()
@@ -338,13 +365,12 @@ public class AttachRelationTask {
             RetrievedCacheContainer cache,
             T taskDto,
             Map<String, FileObjectDto> fileObjectDtoMap,
-            ListRelation<FileObjectOnTaskDto> attachmentsRelation,
             List<FileObjectRetriever> retrievers
     ) {
         this.internalAttachRelationToAttachments(taskDto, fileObjectDtoMap);
 
         retrievers.forEach(retriever -> {
-            if (retriever != null && attachmentsRelation.isHasValue() && attachmentsRelation.getValue() != null) {
+            if (retriever != null && taskDto.getAttachments().isHasValue() && taskDto.getAttachments().getValue() != null) {
                 AttachRelationFileObject attachRelationFileObject = new AttachRelationFileObject(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -353,7 +379,15 @@ public class AttachRelationTask {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationFileObject.attach(operatorId, cache, retriever, attachmentsRelation.getValue());
+                var attached = attachRelationFileObject.attach(operatorId, cache, retriever, taskDto.getAttachments().getValue());
+
+                Map<String, FileObjectDto> attachedMap = new HashMap<>();
+
+                for (FileObjectDto fileObjectDto : attached) {
+                    attachedMap.put(fileObjectDto.getFileObjectId(), fileObjectDto);
+                }
+
+                this.internalAttachRelationToAttachments(taskDto, attachedMap);
             }
         });
     }
@@ -363,7 +397,6 @@ public class AttachRelationTask {
             RetrievedCacheContainer cache,
             List<T> taskDto,
             Map<String, FileObjectDto> fileObjectDtoMap,
-            List<ListRelation<FileObjectOnTaskDto>> attachmentsRelation,
             List<FileObjectRetriever> retrievers
     ) {
         for (T dto : taskDto) {
@@ -371,12 +404,7 @@ public class AttachRelationTask {
         }
 
         retrievers.forEach(retriever -> {
-            List<List<FileObjectOnTaskDto>> attachmentsList = attachmentsRelation.stream()
-                    .filter(ListRelation::isHasValue)
-                    .map(ListRelation::getValue)
-                    .toList();
-
-            if (retriever != null && !attachmentsList.isEmpty()) {
+            if (retriever != null) {
                 AttachRelationFileObject attachRelationFileObject = new AttachRelationFileObject(
                         userProfileQueryProxy,
                         teamQueryProxy,
@@ -385,7 +413,29 @@ public class AttachRelationTask {
                         taskQueryProxy,
                         fileObjectQueryProxy
                 );
-                attachRelationFileObject.attach(operatorId, cache, retriever, attachmentsList.stream().flatMap(List::stream).toList());
+                Set<String> seenIds = new HashSet<>();
+                List<FileObjectOnTaskDto> allAttachments = taskDto.stream()
+                        .map(T::getAttachments)
+                        .map(ListRelation::getValue)
+                        .flatMap(List::stream)
+                        .filter(fileObject -> seenIds.add(fileObject.getFileObjectId()))
+                        .toList();
+
+                var attached = attachRelationFileObject.attach(
+                        operatorId,
+                        cache,
+                        retriever,
+                        allAttachments
+                );
+
+                Map<String, FileObjectDto> attachedMap = new HashMap<>();
+                for (FileObjectDto fileObjectDto : attached) {
+                    attachedMap.put(fileObjectDto.getFileObjectId(), fileObjectDto);
+                }
+
+                for (T dto : taskDto) {
+                    this.internalAttachRelationToAttachments(dto, attachedMap);
+                }
             }
         });
     }
