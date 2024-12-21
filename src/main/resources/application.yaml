@@ -17,6 +17,12 @@ spring:
 
 server:
   port: ${WEB_GATEWAY_PORT:8100}
+  tomcat:
+    threads:
+      max: ${MAX_THREAD:200}       # 最大スレッド数（デフォルト: 200）
+      min-spare: ${MIN_THREAD:10}   # 最小アイドルスレッド数（デフォルト: 10）
+    connection-timeout: ${CONNECTION_TIMEOUT:20000} # 接続タイムアウト（デフォルト: 20000）
+    accept-count: ${ACCEPT_COUNT:100} # バックログ数（デフォルト: 100）
 springdoc:
   swaggerUi:
     path: /swagger-ui.html
