@@ -1,6 +1,8 @@
 # 手動Build手順
 
 ``` sh
-./gradlew bootBuildImage --imageName=ablankz/nova-web-gateway:1.0.7
-docker push ablankz/nova-web-gateway:1.0.7
+BUILD_VERSION=1.0.7
+./gradlew jibMultiBuild -PimageVersion=$BUILD_VERSION
+docker push ablankz/nova-web-gateway:$BUILD_VERSION-amd64
+docker push ablankz/nova-web-gateway:$BUILD_VERSION-arm64
 ```
