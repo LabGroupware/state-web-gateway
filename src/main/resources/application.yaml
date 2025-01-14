@@ -40,7 +40,7 @@ grpc:
       negotiationType: PLAINTEXT
       keep-alive-time: 600
       keep-alive-timeout: 60
-      max-inbound-message-size: 52428800
+      max-inbound-message-size: 104857600
     userProfileService:
       address: dns:///${USER_PROFILE_SERVICE_HOST:localhost}:${USER_PROFILE_SERVICE_GRPC_PORT:9080}
       enableKeepAlive: true
@@ -48,7 +48,7 @@ grpc:
       negotiationType: PLAINTEXT
       keep-alive-time: 600
       keep-alive-timeout: 60
-      max-inbound-message-size: 52428800
+      max-inbound-message-size: 104857600
     userPreferenceService:
       address: dns:///${USER_PREFERENCE_SERVICE_HOST:localhost}:${USER_PREFERENCE_SERVICE_GRPC_PORT:9070}
       enableKeepAlive: true
@@ -56,7 +56,7 @@ grpc:
       negotiationType: PLAINTEXT
       keep-alive-time: 600
       keep-alive-timeout: 60
-      max-inbound-message-size: 52428800
+      max-inbound-message-size: 104857600
     organizationService:
       address: dns:///${ORGANIZATION_SERVICE_HOST:localhost}:${ORGANIZATION_SERVICE_GRPC_PORT:9060}
       enableKeepAlive: true
@@ -64,7 +64,7 @@ grpc:
       negotiationType: PLAINTEXT
       keep-alive-time: 600
       keep-alive-timeout: 60
-      max-inbound-message-size: 52428800
+      max-inbound-message-size: 104857600
     teamService:
       address: dns:///${TEAM_SERVICE_HOST:localhost}:${TEAM_SERVICE_GRPC_PORT:9050}
       enableKeepAlive: true
@@ -72,7 +72,7 @@ grpc:
       negotiationType: PLAINTEXT
       keep-alive-time: 600
       keep-alive-timeout: 60
-      max-inbound-message-size: 52428800
+      max-inbound-message-size: 104857600
     storageService:
         address: dns:///${STORAGE_SERVICE_HOST:localhost}:${STORAGE_SERVICE_GRPC_PORT:9040}
         enableKeepAlive: true
@@ -80,7 +80,7 @@ grpc:
         negotiationType: PLAINTEXT
         keep-alive-time: 600
         keep-alive-timeout: 60
-        max-inbound-message-size: 52428800
+        max-inbound-message-size: 104857600
     planService:
       address: dns:///${PLAN_SERVICE_HOST:localhost}:${PLAN_SERVICE_GRPC_PORT:9030}
       enableKeepAlive: true
@@ -88,4 +88,4 @@ grpc:
       negotiationType: PLAINTEXT
       keep-alive-time: 600
       keep-alive-timeout: 60
-      max-inbound-message-size: 52428800
+      max-inbound-message-size: 104857600

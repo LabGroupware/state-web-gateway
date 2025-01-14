@@ -114,7 +114,6 @@ public class UserProfileQueryProxy {
             boolean withCount
     ) {
         GetUserProfilesResponse response = userProfileServiceBlockingStub
-                .withMaxInboundMessageSize(512 * 1024 * 1024)
                 .getUserProfiles(
                 GetUserProfilesRequest.newBuilder()
                         .setOperatorId(operatorId)
@@ -138,7 +137,6 @@ public class UserProfileQueryProxy {
             String sortOrder
     ) {
         GetPluralUserProfilesResponse response = userProfileServiceBlockingStub
-                .withMaxInboundMessageSize(512 * 1024 * 1024)
                 .getPluralUserProfiles(
                 GetPluralUserProfilesRequest.newBuilder()
                         .setOperatorId(operatorId)
@@ -162,7 +160,6 @@ public class UserProfileQueryProxy {
             String sortOrder
     ) {
         GetPluralUserProfilesByUserIdResponse response = userProfileServiceBlockingStub
-                .withMaxInboundMessageSize(512 * 1024 * 1024)
                 .getPluralUserProfilesByUserId(
                 GetPluralUserProfilesByUserIdRequest.newBuilder()
                         .setOperatorId(operatorId)
