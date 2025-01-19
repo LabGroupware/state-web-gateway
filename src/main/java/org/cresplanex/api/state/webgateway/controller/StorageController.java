@@ -78,11 +78,11 @@ public class StorageController {
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset,
             @RequestParam(name = "cursor", required = false, defaultValue = "") String cursor,
             @RequestParam(name = "pagination", required = false, defaultValue = "none") String pagination,
-            @RequestParam(name = "sortField", required = false, defaultValue = "none") String sortField,
-            @RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
-            @RequestParam(name = "withCount", required = false, defaultValue = "false") boolean withCount,
-            @RequestParam(name = "hasBucketFilter", required = false, defaultValue = "false") boolean hasBucketFilter,
-            @RequestParam(name = "filterBucketIds", required = false, defaultValue = "") List<String> filterBucketIds,
+            @RequestParam(name = "sort_field", required = false, defaultValue = "none") String sortField,
+            @RequestParam(name = "sort_order", required = false, defaultValue = "asc") String sortOrder,
+            @RequestParam(name = "with_count", required = false, defaultValue = "false") boolean withCount,
+            @RequestParam(name = "has_bucket_filter", required = false, defaultValue = "false") boolean hasBucketFilter,
+            @RequestParam(name = "filter_bucket_ids", required = false, defaultValue = "") List<String> filterBucketIds,
             @RequestParam(name = "with", required = false) List<String> with
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
