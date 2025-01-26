@@ -81,8 +81,16 @@ grpc:
         keep-alive-time: 600
         keep-alive-timeout: 60
         max-inbound-message-size: 104857600
-    planService:
-      address: dns:///${PLAN_SERVICE_HOST:localhost}:${PLAN_SERVICE_GRPC_PORT:9030}
+    planCommandService:
+      address: dns:///${PLAN_COMMAND_SERVICE_HOST:localhost}:${PLAN_COMMAND_SERVICE_GRPC_PORT:9030}
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: PLAINTEXT
+      keep-alive-time: 600
+      keep-alive-timeout: 60
+      max-inbound-message-size: 104857600
+    planQueryService:
+      address: dns:///${PLAN_QUERY_SERVICE_HOST:localhost}:${PLAN_QUERY_SERVICE_GRPC_PORT:9020}
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: PLAINTEXT

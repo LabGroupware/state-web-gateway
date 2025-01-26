@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PlanCommandServiceProxy {
 
-    @GrpcClient("planService")
+    @GrpcClient("planCommandService")
     private PlanServiceGrpc.PlanServiceBlockingStub planServiceBlockingStub;
 
     public String createTask(

@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 public class TaskQueryProxy {
 
-    @GrpcClient("planService")
+    @GrpcClient("planQueryService")
     private PlanServiceGrpc.PlanServiceBlockingStub planServiceBlockingStub;
 
     public TaskDto findTask(
